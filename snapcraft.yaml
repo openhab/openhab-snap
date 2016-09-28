@@ -49,9 +49,27 @@ parts:
         stage:
           - -start*
           - -runtime/karaf/bin/*.bat
+          - -usr/bin
+          - -usr/include
+          - -usr/lib/arm-linux-gnueabihf
+          - -usr/lib/x86_*
+          - -usr/lib/gcc
+          - -usr/lib/ssl
+          - -usr/lib/X11
+          - -usr/sbin
+          - -usr/share
         snap:
           - -start*
           - -runtime/karaf/bin/*.bat
+          - -usr/bin
+          - -usr/include
+          - -usr/lib/arm-linux-gnueabihf
+          - -usr/lib/x86_*
+          - -usr/lib/gcc
+          - -usr/lib/ssl
+          - -usr/lib/X11
+          - -usr/sbin
+          - -usr/share
 
     openhab-control:
         source: .
