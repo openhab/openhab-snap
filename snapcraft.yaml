@@ -47,11 +47,11 @@ parts:
         plugin: openhab
         stage-packages: [openjdk-8-jre]
         stage:
-          - -start.bat
-          - -start_debug.bat
+          - -start*.bat
+          - -runtime/karaf/bin/*.bat
         snap:
-          - -start.bat
-          - -start_debug.bat
+          - -start*.bat
+          - -runtime/karaf/bin/*.bat
 
     openhab-control:
         source: .
