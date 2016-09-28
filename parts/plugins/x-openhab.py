@@ -18,13 +18,13 @@ class OpenHabPlugin(snapcraft.plugins.dump.DumpPlugin):
 
     def _modify_oh2_dir(self):
         logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/oh2_dir_layout')
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_HOME}/conf", "${SNAP_USER_COMMON}/conf")
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_HOME}/userdata", "${SNAP_USER_COMMON}/userdata")
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_RUNTIME}/karaf/etc", "${SNAP_USER_COMMON}/karaf/etc")
+        self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_HOME}/conf", "${SNAP_COMMON}/conf")
+        self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_HOME}/userdata", "${SNAP_COMMON}/userdata")
+        self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_RUNTIME}/karaf/etc", "${SNAP_COMMON}/karaf/etc")
 
     def _modify_karaf(self):
         logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/karaf')
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/karaf", "${KARAF_HOME}/instances", "${SNAP_USER_COMMON}/karaf/instances")
+        self._replaceAll(self.installdir+"/runtime/karaf/bin/karaf", "${KARAF_HOME}/instances", "${SNAP_COMMON}/karaf/instances")
 
     def _replaceAll(self,filePath,searchExp,replaceExp):
         for line in fileinput.input(filePath, inplace=1):

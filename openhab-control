@@ -1,28 +1,26 @@
 #!/bin/bash
 
-mkdir -p $SNAP_USER_COMMON
-# mkdir -p $SNAP_USER_DATA
 
 export JAVA_HOME=$SNAP/usr/lib/jvm/java-8-openjdk-$SNAP_ARCH
 export PATH=$JAVA_HOME/jre/bin:$PATH
 
-# TODO: split into SNAP_USER_COMMON SNAP_USER_DATA
+# TODO: split into SNAP_COMMON SNAP_DATA
 # copy over data from snap if needed
 # conf
-if [ ! -d $SNAP_USER_COMMON/conf ]; then
-    cp -rf $SNAP/conf $SNAP_USER_COMMON/
+if [ ! -d $SNAP_COMMON/conf ]; then
+    cp -rf $SNAP/conf $SNAP_COMMON/
 fi
 
 # userdata
-if [ ! -d $SNAP_USER_COMMON/userdata ]; then
-    cp -rf $SNAP/userdata $SNAP_USER_COMMON/
+if [ ! -d $SNAP_COMMON/userdata ]; then
+    cp -rf $SNAP/userdata $SNAP_COMMON/
 fi
 
 # runtime
-mkdir -p $SNAP_USER_COMMON/karaf
-# TODO: this probably should be $SNAP_USER_COMMON
-if [ ! -d $SNAP_USER_COMMON/karaf/etc ]; then
-    cp -rf $SNAP/runtime/karaf/etc $SNAP_USER_COMMON/karaf/
+mkdir -p $SNAP_COMMON/karaf
+# TODO: this probably should be $SNAP_COMMON
+if [ ! -d $SNAP_COMMON/karaf/etc ]; then
+    cp -rf $SNAP/runtime/karaf/etc $SNAP_COMMON/karaf/
 fi
 
 
