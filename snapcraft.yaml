@@ -1,4 +1,4 @@
-name: openhab2
+name: openhab
 version: "2.0.0.b4-1"
 summary: openhab 2.0 smart home server
 description: |
@@ -6,43 +6,43 @@ description: |
 confinement: strict
 
 apps:
-    openhab2:
-        command: openhab2-control
-        stop-command: openhab2-control stop
+    openhab:
+        command: openhab-control
+        stop-command: openhab-control stop
         daemon: simple
         restart-condition: always
         plugs: [home, network, network-bind]
 
     start:
-        command: openhab2-control
+        command: openhab-control
         plugs: [home, network, network-bind]
 
     clean:
-        command: openhab2-control clean
+        command: openhab-control clean
         plugs: [home, network, network-bind]
 
     debug:
-        command: openhab2-control debug
+        command: openhab-control debug
         plugs: [home, network, network-bind]
 
     status:
-        command: openhab2-control status
+        command: openhab-control status
         plugs: [home, network, network-bind]
 
     stop:
-        command: openhab2-control stop
+        command: openhab-control stop
         plugs: [home, network, network-bind]
 
     console:
-        command: openhab2-control console
+        command: openhab-control console
         plugs: [home, network, network-bind]
 
     client:
-        command: openhab2-control client
+        command: openhab-control client
         plugs: [home, network, network-bind]
 
 parts:
-    openhab2:
+    openhab:
         source: https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab-offline%2F2.0.0.b4%2Fopenhab-offline-2.0.0.b4.tar.gz
         plugin: openhab
         stage-packages: [openjdk-8-jre]
@@ -53,8 +53,8 @@ parts:
           - -start.bat
           - -start_debug.bat
 
-    openhab2-control:
+    openhab-control:
         source: .
         plugin: dump
         organize:
-            openhab2-control: bin/openhab2-control
+            openhab-control: bin/openhab-control
