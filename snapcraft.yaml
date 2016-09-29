@@ -3,7 +3,9 @@ version: "2.0.0.b4-1"
 summary: openhab 2.0 smart home server
 description: |
  openHAB - a vendor and technology agnostic open source automation software for your home.
-confinement: strict
+
+confinement: devmode
+grade: devel
 
 apps:
     openhab:
