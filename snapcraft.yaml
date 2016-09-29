@@ -46,7 +46,7 @@ parts:
         plugin: openhab
         stage-packages: [openjdk-8-jre]
         organize:
-          usr/lib/jvm/java-8-openjdk-*/jre: jre
+          usr/lib/jvm/java-8-openjdk-*: jdk
         filesets:
           binaries:
             - -start*
