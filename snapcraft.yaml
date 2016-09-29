@@ -46,30 +46,21 @@ parts:
         source: https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab-online%2F2.0.0.b4%2Fopenhab-online-2.0.0.b4.tar.gz
         plugin: openhab
         stage-packages: [openjdk-8-jre]
+        organize:
+          usr/lib/jvm/java-8-openjdk-*/jre: jre
+        filesets:
+          binaries:
+            - -start*
+            - -runtime/karaf/bin/*.bat
+            - -etc
+            - -lib
+            - -usr/lib
+            - -usr
+            - -var
         stage:
-          - -start*
-          - -runtime/karaf/bin/*.bat
-          - -usr/bin
-          - -usr/include
-          - -usr/lib/arm-linux-gnueabihf
-          - -usr/lib/x86_*
-          - -usr/lib/gcc
-          - -usr/lib/ssl
-          - -usr/lib/X11
-          - -usr/sbin
-          - -usr/share
+          - $binaries
         snap:
-          - -start*
-          - -runtime/karaf/bin/*.bat
-          - -usr/bin
-          - -usr/include
-          - -usr/lib/arm-linux-gnueabihf
-          - -usr/lib/x86_*
-          - -usr/lib/gcc
-          - -usr/lib/ssl
-          - -usr/lib/X11
-          - -usr/sbin
-          - -usr/share
+          - $binaries
 
     openhab-control:
         source: .

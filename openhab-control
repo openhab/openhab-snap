@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-export JAVA_HOME=$SNAP/usr/lib/jvm/java-8-openjdk-$SNAP_ARCH
+export JAVA_HOME=$SNAP/
 export PATH=$JAVA_HOME/jre/bin:$PATH
 
 # TODO: split into SNAP_COMMON SNAP_DATA
