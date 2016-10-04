@@ -54,6 +54,7 @@ parts:
           - -start*
           - -runtime/karaf/bin/*.bat
 
+    # java run time
     jre:
         source: .
         plugin: dump
@@ -74,6 +75,7 @@ parts:
         snap:
           - $binaries
 
+    # main control script, use this to control openhab
     openhab-control:
         source: .
         plugin: dump
