@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "Connecting interfaces for openhab"
+
+snap connect openhab:home ubuntu-core:home
+snap connect openhab:process-control ubuntu-core:process-control

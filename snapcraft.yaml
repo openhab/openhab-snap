@@ -79,3 +79,10 @@ parts:
         plugin: dump
         organize:
             openhab-control: bin/openhab-control
+
+    # helper script to cponnect interfaces
+    connect-interfaces:
+        source: .
+        plugin: dump
+        organize:
+            connect-interfaces: bin/connect-interfaces
