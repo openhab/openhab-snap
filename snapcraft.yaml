@@ -1,5 +1,5 @@
 name: openhab
-version: "2.0.0.b4-1"
+version: "2.0.0.b4-2"
 summary: openhab 2.0 smart home server
 description: |
  openHAB - a vendor and technology agnostic open source automation software for your home.
@@ -37,7 +37,7 @@ apps:
 
     console:
         command: openhab-control console
-        plugs: [home, network, network-bind]
+        plugs: [home, network, network-bind, process-control]
 
     client:
         command: openhab-control client
@@ -58,15 +58,17 @@ parts:
         source: .
         plugin: dump
         stage-packages: [openjdk-8-jre]
-        organize:
-          usr/lib/jvm/java-8-openjdk-*: jdk
         filesets:
           binaries:
-            - -etc
             - -lib
-            - -usr/lib
-            - -usr
             - -var
+            - -usr/include
+            - -usr/lib/gcc
+            - -usr/lib/ssl
+            - -usr/lib/X11
+            - -usr/lib/*-linux-gnu/
+            - -usr/sbin
+            - -usr/shared
         stage:
           - $binaries
         snap:
