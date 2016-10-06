@@ -13,7 +13,6 @@ apps:
         command: openhab-control
         stop-command: openhab-control stop
         daemon: simple
-        restart-condition: always
         plugs: [home, network, network-bind]
 
     start:
