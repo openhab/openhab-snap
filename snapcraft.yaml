@@ -58,6 +58,7 @@ parts:
     jre:
         plugin: nil
         stage-packages: [openjdk-8-jre]
+        build-packages: [openjdk-8-jre-headless]
         filesets:
           binaries:
             - -lib
