@@ -6,7 +6,7 @@ description: |
  webgui is available at port 8080: http://<snap device address>:8080
 
 confinement: strict
-grade: devel
+grade: stable
 
 apps:
     openhab:
