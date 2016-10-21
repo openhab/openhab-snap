@@ -11,14 +11,16 @@ else
 fi
 
 # read settings if available
-if pvalue=$(snapctl get OPENHAB_HTTPS_PORT); then
-    OPENHAB_HTTPS_PORT=$pvalue
-fi
-
-if pvalue=$(snapctl get OPENHAB_HTTP_PORT); then
-    OPENHAB_HTTP_PORT=$pvalue
-fi
-
+# TODO: uncomment folling, once snapctl can be called from outside the hooks
+# if pvalue=$(snapctl get OPENHAB_HTTPS_PORT); then
+#     OPENHAB_HTTPS_PORT=$pvalue
+# fi
+#
+# if pvalue=$(snapctl get OPENHAB_HTTP_PORT); then
+#     OPENHAB_HTTP_PORT=$pvalue
+# fi
+# TODO: get rid of this workaround once above can be used
+source $SNAP_COMMON/openhab_settings.sh
 
 # TODO: split into SNAP_COMMON SNAP_DATA
 # copy over data from snap if needed
@@ -39,7 +41,5 @@ if [ ! -d $SNAP_COMMON/karaf/etc ]; then
     cp -rf $SNAP/runtime/karaf/etc $SNAP_COMMON/karaf/
 fi
 
-
 DIRNAME=$SNAP
 exec "${DIRNAME}/runtime/karaf/bin/karaf" "${@}"
-
