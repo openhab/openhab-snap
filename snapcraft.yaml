@@ -77,7 +77,7 @@ parts:
 
     # main control script, use this to control openhab
     openhab-control:
-        source: .
+        source: src
         plugin: dump
         organize:
             openhab-control: bin/openhab-control
