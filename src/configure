@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# settings were altered by user, safest way to get them applied is to restart service
+openhab.stop
+openhab.start

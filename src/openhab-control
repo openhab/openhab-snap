@@ -10,6 +10,16 @@ else
     export PATH=$JAVA_HOME/jre/bin:$PATH
 fi
 
+# read settings if available
+if pvalue=$(snapctl get OPENHAB_HTTPS_PORT); then
+    OPENHAB_HTTPS_PORT=$pvalue
+fi
+
+if pvalue=$(snapctl get OPENHAB_HTTP_PORT); then
+    OPENHAB_HTTP_PORT=$pvalue
+fi
+
+
 # TODO: split into SNAP_COMMON SNAP_DATA
 # copy over data from snap if needed
 # conf

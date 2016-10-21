@@ -3,7 +3,12 @@ version: "2.0.0.b4-4"
 summary: openhab 2.0 smart home server
 description: |
  openHAB - a vendor and technology agnostic open source automation software for your home.
- webgui is available at port 8080: http://<snap device address>:8080
+ webgui is available at user defined port(default is 8080 for http and 8443 for https)
+ http://<snap device address>:{specified http port}
+ https:///<snap device address>:{specified https port}
+ user can alter port by calling:
+ $ snap set openhab OPENHAB_HTTP_PORT="<port value>"
+ $ snap set openhab OPENHAB_HTTPS_PORT="<port value>"
 
 confinement: strict
 grade: stable
@@ -82,3 +87,4 @@ parts:
         organize:
             openhab-control: bin/openhab-control
             connect-interfaces: bin/connect-interfaces
+            configure: meta/hooks/configure
