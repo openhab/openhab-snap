@@ -50,33 +50,26 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
         # handles rest for us, if we have zulu package defined for current architecture
         # use it, and clean stage-packages and build-packages, otherwise clean source
         # if getattr(self.options, 'source', None):
+        self.zulu = True
+        self.build_packages = []
+        self.stage_packages = []
         if 'amd64' == self.project.deb_arch and self.options.zulu_amd64:
-             self.build_packages = []
-             self.stage_packages = []
              setattr(options, 'source', self.options.zulu_amd64)
              self.sourcedir = self.options.zulu_amd64
              logger.info('Setting options to use zulu for amd64 {!r}'.format(self.options.zulu_amd64))
-             logger.info('Option configs:{!r}'.format(self.options))
-             self.zulu = True
-
         elif 'armhf' == self.project.deb_arch and self.options.zulu_armhf:
-             self.build_packages = []
-             self.stage_packages = []
              setattr(options, 'source', self.options.zulu_armhf)
              self.sourcedir = self.options.zulu_armhf
+             logger.info('Setting options to use zulu for amd64 {!r}'.format(self.options.zulu_armhf))
         elif 'arm64' == self.project.deb_arch and self.options.zulu_arm64:
-             self.build_packages = []
-             self.stage_packages = []
              setattr(options, 'source', self.options.zulu_arm64)
              self.sourcedir = self.options.zulu_arm64
+             logger.info('Setting options to use zulu for amd64 {!r}'.format(self.options.zulu_arm64))
         elif 'i386' == self.project.deb_arch and self.options.zulu_x86:
-             self.build_packages = []
-             self.stage_packages = []
              setattr(options, 'source', self.options.zulu_x86)
              self.sourcedir = self.options.zulu_x86
+             logger.info('Setting options to use zulu for amd64 {!r}'.format(self.options.zulu_x86))
         else:
-#             self.sourcedir = None
-#             setattr(options, 'source', None)
              self.stage_packages.append('openjdk-8-jre')
              self.build_packages.append('openjdk-8-jre-headless')
              self.zulu = False
@@ -89,6 +82,10 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
                 self.builddir, self.installdir,
                 copy_function=lambda src, dst: dump._link_or_copy(src, dst,
                                                              self.installdir))
+
+    def enable_cross_compilation(self):
+        if not self.zulu:
+            pass
 
     def env(self, root):
         # set env based on java runtime we are using
