@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# setup java env, jre can be in different locations
-# as we might use openjdk on x86 and zulu on armhf
-if [ -d $SNAP/jre ]; then
-    export JAVA_HOME=$SNAP/jre
-    export PATH=$JAVA_HOME/bin:$PATH
-else
-    export JAVA_HOME=$SNAP/usr/lib/jvm/java-8-openjdk-$SNAP_ARCH
-    export PATH=$JAVA_HOME/jre/bin:$PATH
-fi
-
 # read settings if available
 # TODO: uncomment folling, once snapctl can be called from outside the hooks
 # if pvalue=$(snapctl get OPENHAB_HTTPS_PORT); then
