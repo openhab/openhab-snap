@@ -31,6 +31,9 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
             'type': 'string'
         }
 
+        if 'source' in schema['required']:
+            del schema['required']
+
         # Inform Snapcraft of the properties associated with pulling. If these
         # change in the YAML Snapcraft will consider the build step dirty.
         schema['pull-properties'].append('zulu-armhf')
@@ -46,13 +49,16 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
         # we want to be clever and filter schema based on architecture, so snapcraft
         # handles rest for us, if we have zulu package defined for current architecture
         # use it, and clean stage-packages and build-packages, otherwise clean source
-        logger.info('Deciding which java runtime to use: {!r}'.format(self.project.deb_arch))
-        if getattr(self.options, 'source', None):
+        # if getattr(self.options, 'source', None):
         if 'amd64' == self.project.deb_arch and self.options.zulu_amd64:
              self.build_packages = []
              self.stage_packages = []
              setattr(options, 'source', self.options.zulu_amd64)
              self.sourcedir = self.options.zulu_amd64
+             logger.info('Setting options to use zulu for amd64 {!r}'.format(self.options.zulu_amd64))
+             logger.info('Option configs:{!r}'.format(self.options))
+             self.zulu = True
+
         elif 'armhf' == self.project.deb_arch and self.options.zulu_armhf:
              self.build_packages = []
              self.stage_packages = []
@@ -69,4 +75,52 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
              setattr(options, 'source', self.options.zulu_x86)
              self.sourcedir = self.options.zulu_x86
         else:
-             self.sourcedir = None
+#             self.sourcedir = None
+#             setattr(options, 'source', None)
+             self.stage_packages.append('openjdk-8-jre')
+             self.build_packages.append('openjdk-8-jre-headless')
+             self.zulu = False
+             logger.info('We do not have zulu release for {!r}, defaulting to openjdk runtime'.format(self.project.deb_arch))
+
+    def build(self):
+        super().build()
+        if self.zulu:
+            snapcraft.file_utils.link_or_copy_tree(
+                self.builddir, self.installdir,
+                copy_function=lambda src, dst: dump._link_or_copy(src, dst,
+                                                             self.installdir))
+
+    def env(self, root):
+        # set env based on java runtime we are using
+        if self.zulu:
+            return ['JAVA_HOME=%s/jre' % root,
+                    'PATH=%s/jre/bin:$PATH' % root]
+        else:
+            return ['JAVA_HOME=%s/usr/lib/jvm/java-8-openjdk-%s' % (root, self.project.deb_arch),
+                    'PATH=%s/usr/lib/jvm/java-8-openjdk-%s:$PATH' % (root, self.project.deb_arch)]
+
+    def snap_fileset(self):
+        # Cut out jdk/zulu-jdk bits (jre bits are in default-java/jre)
+        if self.zulu:
+            return (['-bin',
+                     '-demo',
+                     '-include',
+                     '-lib',
+                     '-man',
+                     '-sample',
+                     '-src.zip',
+                     '-jre/lib/aarch32/client/libjvm.diz',
+                     '-openhab-control',
+                     '-connect-interfaces',
+                     ])
+        else:
+            return (['-lib',
+                     '-var',
+                     '-usr/include',
+                     '-usr/lib/gcc',
+                     '-usr/lib/ssl',
+                     '-usr/lib/X11',
+                     '-usr/lib/*-linux-gnu/',
+                     '-usr/sbin',
+                     '-usr/shared',
+                     ])
