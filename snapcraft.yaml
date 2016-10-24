@@ -61,24 +61,12 @@ parts:
 
     # java run time
     jre:
-        plugin: nil
-        stage-packages: [openjdk-8-jre]
-        build-packages: [openjdk-8-jre-headless]
-        filesets:
-          binaries:
-            - -lib
-            - -var
-            - -usr/include
-            - -usr/lib/gcc
-            - -usr/lib/ssl
-            - -usr/lib/X11
-            - -usr/lib/*-linux-gnu/
-            - -usr/sbin
-            - -usr/shared
-        stage:
-          - $binaries
-        snap:
-          - $binaries
+        plugin: java-ondra
+        zulu-armhf: http://zulu.org/download/?platform=Linux&processor=ARM%20v7&bitness=32#
+        # zulu-armel:
+        # zulu-arm64
+        zulu-amd64: http://cdn.azul.com/zulu/bin/zulu8.17.0.3-jdk8.0.102-linux_x64.tar.gz
+        # zulu-x86
 
     # main control script, use this to control openhab
     openhab-control:
