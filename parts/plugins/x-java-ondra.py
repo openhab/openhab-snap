@@ -94,7 +94,7 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
                     'PATH=%s/jre/bin:$PATH' % root]
         else:
             return ['JAVA_HOME=%s/usr/lib/jvm/java-8-openjdk-%s' % (root, self.project.deb_arch),
-                    'PATH=%s/usr/lib/jvm/java-8-openjdk-%s:$PATH' % (root, self.project.deb_arch)]
+                    'PATH=%s/usr/lib/jvm/java-8-openjdk-%s/bin:$PATH' % (root, self.project.deb_arch)]
 
     def snap_fileset(self):
         # Cut out jdk/zulu-jdk bits (jre bits are in default-java/jre)
