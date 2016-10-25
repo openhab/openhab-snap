@@ -61,7 +61,7 @@ parts:
 
     # java run time
     jre:
-        plugin: java-ondra
+        plugin: custom-jre
         zulu-armhf: http://cdn.azul.com/zulu-embedded/bin/ezdk-1.8.0_91-8.14.0.6-linux_aarch32.tar.gz
         # zulu-armel:
         # zulu-arm64
