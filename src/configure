@@ -28,6 +28,5 @@ fi
 chmod 755 $SETTINGS_FILE
 
 # we can't use snapctl to restart service, may be one day ....
+# not 
 echo "Setting has been updated, restart service. $sudo openhab.stop"
-# $SNAP/command-stop.wrapper
-# $SNAP/command-start.wrapper
