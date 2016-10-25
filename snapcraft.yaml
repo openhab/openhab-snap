@@ -6,9 +6,11 @@ description: |
  webgui is available at user defined port(default is 8080 for http and 8443 for https)
  http://<snap device address>:{specified http port}
  https:///<snap device address>:{specified https port}
- user can alter port by calling:
+ Port settings can be altered by calling:
  $ snap set openhab OPENHAB_HTTP_PORT="<port value>"
  $ snap set openhab OPENHAB_HTTPS_PORT="<port value>"
+ to make port change effective, service needs to be restarted:
+ $ sudo systemctl restart snap.openhab.openhab.service
 
 confinement: strict
 grade: stable
