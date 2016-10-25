@@ -1,7 +1,4 @@
 # -*- Mode:Python; indent-tabs-mode:nil; tab-width:4 -*-
-import os
-import fileinput
-import sys
 import snapcraft
 import logging
 
@@ -47,41 +44,36 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
     def __init__(self, name, options, project):
         super().__init__(name, options, project)
         # we want to be clever and filter schema based on architecture, so snapcraft
-        # handles rest for us, if we have zulu package defined for current architecture
-        # use it, and clean stage-packages and build-packages, otherwise clean source
-        # if getattr(self.options, 'source', None):
+        # handles rest for us.
+        # If we have zulu package defined for target architecture use it, and clean stage-packages, build-packages
+        # If we have no zulu package defined, use openjdk-8-jre instead
         self.zulu = True
         self.build_packages = []
         self.stage_packages = []
         if 'amd64' == self.project.deb_arch and self.options.zulu_amd64:
-             setattr(options, 'source', self.options.zulu_amd64)
              self.sourcedir = self.options.zulu_amd64
-             logger.info('Setting options to use zulu for amd64 {!r}'.format(self.options.zulu_amd64))
         elif 'armhf' == self.project.deb_arch and self.options.zulu_armhf:
-             setattr(options, 'source', self.options.zulu_armhf)
              self.sourcedir = self.options.zulu_armhf
-             logger.info('Setting options to use zulu for amd64 {!r}'.format(self.options.zulu_armhf))
         elif 'arm64' == self.project.deb_arch and self.options.zulu_arm64:
-             setattr(options, 'source', self.options.zulu_arm64)
              self.sourcedir = self.options.zulu_arm64
-             logger.info('Setting options to use zulu for amd64 {!r}'.format(self.options.zulu_arm64))
         elif 'i386' == self.project.deb_arch and self.options.zulu_x86:
-             setattr(options, 'source', self.options.zulu_x86)
              self.sourcedir = self.options.zulu_x86
-             logger.info('Setting options to use zulu for amd64 {!r}'.format(self.options.zulu_x86))
         else:
              self.stage_packages.append('openjdk-8-jre')
              self.build_packages.append('openjdk-8-jre-headless')
              self.zulu = False
              logger.info('We do not have zulu release for {!r}, defaulting to openjdk runtime'.format(self.project.deb_arch))
 
+        if self.zulu:
+             setattr(options, 'source', self.sourcedir)
+             logger.info('Using zulu java runtime for {!r}: {!r}'.format(self.project.deb_arch, self.sourcedir))
+
     def build(self):
         super().build()
         if self.zulu:
             snapcraft.file_utils.link_or_copy_tree(
                 self.builddir, self.installdir,
-                copy_function=lambda src, dst: dump._link_or_copy(src, dst,
-                                                             self.installdir))
+                copy_function=lambda src, dst: dump._link_or_copy(src, dst, self.installdir))
 
     def enable_cross_compilation(self):
         if not self.zulu:
@@ -97,7 +89,7 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
                     'PATH=%s/usr/lib/jvm/java-8-openjdk-%s/bin:$PATH' % (root, self.project.deb_arch)]
 
     def snap_fileset(self):
-        # Cut out jdk/zulu-jdk bits (jre bits are in default-java/jre)
+        # Cut out jdk/zulu-jdk bits which are not needed, we want just jre
         if self.zulu:
             return (['-bin',
                      '-demo',
