@@ -10,7 +10,9 @@
 #     OPENHAB_HTTP_PORT=$pvalue
 # fi
 # TODO: get rid of this workaround once above can be used
-source $SNAP_COMMON/openhab_settings.sh
+if [ -f $SNAP_COMMON/openhab_settings.sh ]; then
+    source $SNAP_COMMON/openhab_settings.sh
+fi
 
 # TODO: split into SNAP_COMMON SNAP_DATA
 # copy over data from snap if needed
