@@ -7,26 +7,26 @@
 SETTINGS_FILE="$SNAP_COMMON/openhab_settings.sh"
 # first read existing settings, as snapctl gives us only value which changed
 if [ -f $SETTINGS_FILE ]; then
-    HTTPS_SETTINGS=$(grep 'OPENHAB_HTTPS_PORT' $SETTINGS_FILE)
-    HTTP_SETTINGS=$(grep 'OPENHAB_HTTP_PORT' $SETTINGS_FILE)
+    source $SETTINGS_FILE
 fi
 
 echo "#!/bin/sh\n" > $SETTINGS_FILE
-if pvalue=$(snapctl get OPENHAB_HTTPS_PORT); then
-    echo "export OPENHAB_HTTPS_PORT=$pvalue" >> $SETTINGS_FILE
-elif [ -z '$HTTPS_SETTINGS' ]; then
-    echo $HTTPS_SETTINGS >> $SETTINGS_FILE
-fi
 
-if pvalue=$(snapctl get OPENHAB_HTTP_PORT); then
-    echo "export OPENHAB_HTTP_PORT=$pvalue" >> $SETTINGS_FILE
-elif [ -z '$HTTP_SETTINGS' ]; then
-    echo $HTTP_SETTINGS >> $SETTINGS_FILE
-fi
+# check all the settings
+# list of supported keys
+keys=("OPENHAB_HTTP_PORT" "OPENHAB_HTTPS_PORT")
+for key in ${keys[@]}
+do
+  if value=$(snapctl get $key); then
+      echo "export $key='$value'" >> $SETTINGS_FILE
+  elif [ -d "${!key}" ]; then
+      # store back value from SETTINGS_FILE
+      echo "export $key='${!key}'" >> $SETTINGS_FILE
+  fi
+done
 
 # set file executable
 chmod 755 $SETTINGS_FILE
 
 # we can't use snapctl to restart service, may be one day ....
-# not 
 echo "Setting has been updated, restart service. $sudo openhab.stop"
