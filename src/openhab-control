@@ -16,7 +16,6 @@ if [ -f $SNAP_COMMON/openhab_settings.sh ]; then
     source $SNAP_COMMON/openhab_settings.sh
 fi
 
-# TODO: split into SNAP_COMMON SNAP_DATA
 # copy over data from snap if needed
 # conf
 if [ ! -d $SNAP_COMMON/conf ]; then
