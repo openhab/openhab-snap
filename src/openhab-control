@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# read openhab config
+source $SNAP/bin/config
+
 # read settings if available
 # TODO: uncomment folling, once snapctl can be called from outside the hooks
 # list of supported keys
@@ -11,10 +14,21 @@
 #       export $key=$value
 #   fi
 # done
+
 # TODO: get rid of this workaround once above can be used
-if [ -f $SNAP_COMMON/openhab_settings.sh ]; then
-    source $SNAP_COMMON/openhab_settings.sh
-fi
+# loop through all values, and if not defined, use default value
+for key in ${keys[@]}
+do
+  if [ -z "${!key}" ]; then
+      # use default value
+      default_value="DEFAULT_$key"
+      echo "using default value: $key='${!default_value}'"
+      export $key=${!default_value}
+      # echo "export $key='${!def_value}'" >> $SETTINGS_FILE
+  else
+      echo "$key='${!key}'"
+  fi
+done
 
 # copy over data from snap if needed
 # conf

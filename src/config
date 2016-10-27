@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# store here all configuration for openhab snap
+
+# TODO: get rid of this workaround once above can be used
+SETTINGS_FILE="$SNAP_COMMON/openhab_settings.sh"
+[ -f $SETTINGS_FILE ] && source $SETTINGS_FILE
+
+# list of supported keys
+keys=("OPENHAB_HTTP_PORT" "OPENHAB_HTTPS_PORT")
+
+# default values
+DEFAULT_OPENHAB_HTTP_PORT="8080"
+DEFAULT_OPENHAB_HTTPS_PORT="8443"

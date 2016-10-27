@@ -1,20 +1,14 @@
 #!/bin/bash
 
+# read openhab config
+source $SNAP/bin/config
+
 # settings were altered by user, safest way to get them applied is to restart service
 
+# TODO: remove this workaround once it's not needed
 # for the moment we can't read settings outside of the hook,
 # so store all settings in helpper script which is then picked by main wrapper
-SETTINGS_FILE="$SNAP_COMMON/openhab_settings.sh"
-# first read existing settings, as snapctl gives us only value which changed
-if [ -f $SETTINGS_FILE ]; then
-    source $SETTINGS_FILE
-fi
-
 echo "#!/bin/sh\n" > $SETTINGS_FILE
-
-# check all the settings
-# list of supported keys
-keys=("OPENHAB_HTTP_PORT" "OPENHAB_HTTPS_PORT")
 for key in ${keys[@]}
 do
   if value=$(snapctl get $key); then
