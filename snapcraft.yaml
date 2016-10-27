@@ -51,8 +51,7 @@ apps:
         plugs: [home, network, network-bind]
 
     help:
-        command: openhab-control client
-        plugs: [home, network, network-bind]
+        command: openhab-control help
 
 parts:
     openhab:
