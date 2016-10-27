@@ -1,0 +1,18 @@
+#!/bin/bash
+
+source $SNAP/bin/config &>/dev/null
+
+echo -e "Welcone to brave new snappy world\n"
+echo -e "Make sure you have connected all interfaces, check more by calling $ snap interfaces"
+echo -e "Or use helper script $ /snap/openhab/current/bin/connect-interfaces\n"
+# parse config file for supported settings keys
+echo -e "openHAB supports settings keys"
+echo -e "values can be changed by calling\n$ snap set openhab <key name>='<key value>'"
+echo -e "list of supported keys:"
+for key in ${keys[@]}
+do
+    default_value="DEFAULT_$key"
+    description="DESCRIPTION_$key"
+    echo -e "\t${key}:   ${!description}"
+    echo -e "\t\tdefault value: '${!default_value}', current value: '${!key}'"
+done
