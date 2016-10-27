@@ -48,5 +48,23 @@ if [ ! -d $SNAP_COMMON/karaf/etc ]; then
     cp -rf $SNAP/runtime/karaf/etc $SNAP_COMMON/karaf/
 fi
 
-DIRNAME=$SNAP
-exec "${DIRNAME}/runtime/karaf/bin/karaf" "${@}"
+# show help or call karaf to handle user's request
+if [ $1 == 'help' ]; then
+    echo "Welcone to brave new snappy world\n"
+    echo "Make sure you have connected all interfaces, check more by calling $ snap interfaces"
+    echo "Or use helper script $ /snap/openhab/current/bin/connect-interfaces\n"
+    # parse config file for supported settings keys
+    echo "openHAB supports settings keys"
+    echo "values can be changed by calling\n$ snap set openhab <key name>='<key value>'"
+    echo "list of supported keys:"
+    for key in ${keys[@]}
+    do
+        default_value="DEFAULT_$key"
+        description="DESCRIPTION_$key"
+        echo "\t${key}:   ${!description}"
+        echo "\t\tdefault value: '${!default_value}', current value: '${!key}'"
+    done
+else
+    DIRNAME=$SNAP
+    exec "${DIRNAME}/runtime/karaf/bin/karaf" "${@}"
+fi
