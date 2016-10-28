@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # read openhab config
-source $SNAP/bin/config
+. $SNAP/bin/config
 
 # settings were altered by user, safest way to get them applied is to restart service
 
 # TODO: remove this workaround once it's not needed
 # for the moment we can't read settings outside of the hook,
 # so store all settings in helpper script which is then picked by main wrapper
-echo "#!/bin/sh\n" > $SETTINGS_FILE
+echo -e "#!/bin/sh\n" > $SETTINGS_FILE
 for key in ${keys[@]}
 do
   if value=$(snapctl get $key); then
@@ -23,4 +23,4 @@ done
 chmod 755 $SETTINGS_FILE
 
 # we can't use snapctl to restart service, may be one day ....
-echo "Setting has been updated, restart service. $sudo openhab.stop"
+echo "Setting has been updated, restart service. $ sudo openhab.stop"
