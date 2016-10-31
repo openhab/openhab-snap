@@ -1,13 +1,12 @@
-# Snappy openHAB
+# openHAB-snap
 
-
-OpenHAB server packaged as a snap. It consists of:
+openHAB packaged as a snap for Ubuntu core. It consists of:
   - java runtime
   - openhab 2.0-beta
 
 ## How to install
 
-This openHAB snap is available in the store for release series 16 (e.g. Ubuntu 16.04). Install via:
+This openHAB snap is available in the Ubuntu store for release series 16 (e.g. Ubuntu 16.04). Install via:
 
 $ sudo snap install openhab
 
