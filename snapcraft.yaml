@@ -1,0 +1,85 @@
+name: openhab
+version: "2.0.0.b4-5"
+summary: openhab 2.0 smart home server
+description: |
+ openHAB - a vendor and technology agnostic open source automation software for your home.
+ webgui is available at user defined port(default is 8080 for http and 8443 for https)
+ http://<snap device address>:{specified http port}
+ https:///<snap device address>:{specified https port}
+ Port settings can be altered by calling:
+ $ snap set openhab OPENHAB_HTTP_PORT="<port value>"
+ $ snap set openhab OPENHAB_HTTPS_PORT="<port value>"
+ to make port change effective, service needs to be restarted:
+ $ sudo systemctl restart snap.openhab.openhab.service
+
+confinement: strict
+grade: stable
+
+apps:
+    openhab:
+        command: openhab-control
+        stop-command: openhab-control stop
+        daemon: simple
+        plugs: [home, network, network-bind]
+
+    start:
+        command: openhab-control
+        plugs: [home, network, network-bind]
+
+    clean:
+        command: openhab-control clean
+        plugs: [home, network, network-bind]
+
+    debug:
+        command: openhab-control debug
+        plugs: [home, network, network-bind]
+
+    status:
+        command: openhab-control status
+        plugs: [home, network, network-bind]
+
+    stop:
+        command: openhab-control stop
+        plugs: [home, network, network-bind]
+
+    console:
+        command: openhab-control console
+        plugs: [home, network, network-bind, process-control]
+
+    client:
+        command: openhab-control client
+        plugs: [home, network, network-bind]
+
+    help:
+        command: openhab-help
+
+parts:
+    openhab:
+        source: https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab-online%2F2.0.0.b4%2Fopenhab-online-2.0.0.b4.tar.gz
+        plugin: openhab
+        stage:
+          - -start*
+          - -runtime/karaf/bin/*.bat
+        snap:
+          - -start*
+          - -runtime/karaf/bin/*.bat
+
+    # java run time
+    jre:
+        plugin: custom-jre
+        zulu-armhf: http://cdn.azul.com/zulu-embedded/bin/ezdk-1.8.0_91-8.14.0.6-linux_aarch32.tar.gz
+        # zulu-armel:
+        # zulu-arm64
+        zulu-amd64: http://cdn.azul.com/zulu/bin/zulu8.17.0.3-jdk8.0.102-linux_x64.tar.gz
+        # zulu-x86
+
+    # main control script, use this to control openhab
+    openhab-control:
+        source: src
+        plugin: dump
+        organize:
+            openhab-control: bin/openhab-control
+            connect-interfaces: bin/connect-interfaces
+            config: bin/config
+            openhab-help: bin/openhab-help
+            configure: meta/hooks/configure
