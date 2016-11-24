@@ -3,6 +3,12 @@
 echo "This is helper script and it shoud be called by user directly!"
 echo "Connecting interfaces for openhab"
 
-snap connect openhab:home ubuntu-core:home
-snap connect openhab:process-control ubuntu-core:process-control
-snap connect openhab:serial-port ubuntu-core:serial-port
+if [ -d /snap/core/ ]; then
+    snap connect openhab:home core:home
+    snap connect openhab:process-control core:process-control
+    snap connect openhab:serial-port core:serial-port
+else
+    snap connect openhab:home ubuntu-core:home
+    snap connect openhab:process-control ubuntu-core:process-control
+    snap connect openhab:serial-port ubuntu-core:serial-port
+fi
