@@ -18,24 +18,23 @@ class OpenHabPlugin(snapcraft.plugins.dump.DumpPlugin):
         self._fix_instance_path()
 
     def _modify_oh2_dir(self):
-        logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/oh2_dir_layout')
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_HOME}/conf", "${SNAP_COMMON}/conf")
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_HOME}/userdata", "${SNAP_COMMON}/userdata")
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_RUNTIME}/karaf/etc", "${SNAP_COMMON}/karaf/etc")
+        logger.warning('Patching ' + self.installdir + '/runtime/bin/oh2_dir_layout')
+        self._replaceAll(self.installdir+"/runtime/bin/oh2_dir_layout", "${OPENHAB_HOME}/conf", "${SNAP_COMMON}/conf")
+        self._replaceAll(self.installdir+"/runtime/bin/oh2_dir_layout", "${OPENHAB_HOME}/userdata", "${SNAP_COMMON}/userdata")
 
     def _modify_setenv(self):
         logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/setenv')
         self._replaceAll(self.installdir+"/runtime/karaf/bin/setenv","-Dopenhab.logdir=${OPENHAB_LOGDIR}","-Dopenhab.logdir=${OPENHAB_LOGDIR}\n  -Duser.home=${SNAP_COMMON}")
 
     def _fix_instance_path(self):
-        logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/client')
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/client", "${KARAF_HOME}/instances", "${SNAP_COMMON}/karaf/instances")
-        logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/instance')
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/instance", "${KARAF_HOME}/instances", "${SNAP_COMMON}/karaf/instances")
-        logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/karaf')
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/karaf", "${KARAF_HOME}/instances", "${SNAP_COMMON}/karaf/instances")
-        logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/shell')
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/shell", "${KARAF_HOME}/instances", "${SNAP_COMMON}/karaf/instances")
+        logger.warning('Patching ' + self.installdir + '/runtime/bin/client')
+        self._replaceAll(self.installdir+"/runtime/bin/client", "${KARAF_HOME}/instances", "${SNAP_COMMON}/karaf/instances")
+        logger.warning('Patching ' + self.installdir + '/runtime/bin/instance')
+        self._replaceAll(self.installdir+"/runtime/bin/instance", "${KARAF_HOME}/instances", "${SNAP_COMMON}/karaf/instances")
+        logger.warning('Patching ' + self.installdir + '/runtime/bin/karaf')
+        self._replaceAll(self.installdir+"/runtime/bin/karaf", "${KARAF_HOME}/instances", "${SNAP_COMMON}/karaf/instances")
+        logger.warning('Patching ' + self.installdir + '/runtime/bin/shell')
+        self._replaceAll(self.installdir+"/runtime/bin/shell", "${KARAF_HOME}/instances", "${SNAP_COMMON}/karaf/instances")
 
     def _replaceAll(self,filePath,searchExp,replaceExp):
         for line in fileinput.input(filePath, inplace=1):
