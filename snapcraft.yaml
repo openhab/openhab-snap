@@ -67,10 +67,10 @@ parts:
     # java run time
     jre:
         plugin: custom-jre
-        zulu-armhf: http://cdn.azul.com/zulu-embedded/bin/ezdk-1.8.0_91-8.14.0.6-linux_aarch32.tar.gz
+        zulu-armhf: http://cdn.azul.com/zulu-embedded/bin/ezdk-1.8.0_102-8.17.0.21-eval-linux_aarch32hf.tar.gz
         # zulu-armel:
         # zulu-arm64
-        zulu-amd64: http://cdn.azul.com/zulu/bin/zulu8.17.0.3-jdk8.0.102-linux_x64.tar.gz
+        zulu-amd64: http://cdn.azul.com/zulu/bin/zulu8.19.0.1-jdk8.0.112-linux_x64.tar.gz
         # zulu-x86
 
     # main control script, use this to control openhab
