@@ -59,10 +59,10 @@ parts:
         plugin: openhab
         stage:
           - -start*
-          - -runtime/karaf/bin/*.bat
+          - -runtime/bin/*.bat
         snap:
           - -start*
-          - -runtime/karaf/bin/*.bat
+          - -runtime/bin/*.bat
 
     # java run time
     jre:

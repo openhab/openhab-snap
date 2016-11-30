@@ -23,8 +23,8 @@ class OpenHabPlugin(snapcraft.plugins.dump.DumpPlugin):
         self._replaceAll(self.installdir+"/runtime/bin/oh2_dir_layout", "${OPENHAB_HOME}/userdata", "${SNAP_COMMON}/userdata")
 
     def _modify_setenv(self):
-        logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/setenv')
-        self._replaceAll(self.installdir+"/runtime/karaf/bin/setenv","-Dopenhab.logdir=${OPENHAB_LOGDIR}","-Dopenhab.logdir=${OPENHAB_LOGDIR}\n  -Duser.home=${SNAP_COMMON}")
+        logger.warning('Patching ' + self.installdir + '/runtime/bin/setenv')
+        self._replaceAll(self.installdir+"/runtime/bin/setenv","-Dopenhab.logdir=${OPENHAB_LOGDIR}","-Dopenhab.logdir=${OPENHAB_LOGDIR}\n  -Duser.home=${SNAP_COMMON}")
 
     def _fix_instance_path(self):
         logger.warning('Patching ' + self.installdir + '/runtime/bin/client')
