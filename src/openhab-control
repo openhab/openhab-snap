@@ -22,7 +22,7 @@ do
   if [ -z "${!key}" ]; then
       # use default value
       default_value="DEFAULT_$key"
-      echo "using default value: $key='${!default_value}'"
+      # echo "using default value: $key='${!default_value}'"
       export $key=${!default_value}
       # echo "export $key='${!def_value}'" >> $SETTINGS_FILE
   else
