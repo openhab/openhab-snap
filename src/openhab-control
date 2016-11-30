@@ -49,4 +49,4 @@ if [ ! -d $SNAP_COMMON/karaf/etc ]; then
 fi
 
 DIRNAME=$SNAP
-exec "${DIRNAME}/runtime/karaf/bin/karaf" "${@}"
+exec "${DIRNAME}/runtime/karaf/bin/${@}"
