@@ -15,12 +15,17 @@ class OpenHabPlugin(snapcraft.plugins.dump.DumpPlugin):
         super().build()
         self._modify_oh2_dir()
         self._modify_karaf()
+        self._modify_setenv()
 
     def _modify_oh2_dir(self):
         logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/oh2_dir_layout')
         self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_HOME}/conf", "${SNAP_COMMON}/conf")
         self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_HOME}/userdata", "${SNAP_COMMON}/userdata")
         self._replaceAll(self.installdir+"/runtime/karaf/bin/oh2_dir_layout", "${OPENHAB_RUNTIME}/karaf/etc", "${SNAP_COMMON}/karaf/etc")
+
+    def _modify_setenv(self):
+        logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/setenv')
+        self._replaceAll(self.installdir+"/runtime/karaf/bin/setenv","-Dopenhab.logdir=${OPENHAB_LOGDIR}","-Dopenhab.logdir=${OPENHAB_LOGDIR}\n  -Duser.home=${SNAP_COMMON}")
 
     def _modify_karaf(self):
         logger.warning('Patching ' + self.installdir + '/runtime/karaf/bin/karaf')
