@@ -30,16 +30,5 @@ do
   fi
 done
 
-# copy over data from snap if needed
-# conf
-if [ ! -d $SNAP_COMMON/conf ]; then
-    cp -rf $SNAP/conf $SNAP_COMMON/
-fi
-
-# userdata
-if [ ! -d $SNAP_COMMON/userdata ]; then
-    cp -rf $SNAP/userdata $SNAP_COMMON/
-fi
-
 DIRNAME=$SNAP
 exec "${DIRNAME}/runtime/bin/${@}"
