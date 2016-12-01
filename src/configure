@@ -25,17 +25,24 @@ chmod 755 $SETTINGS_FILE
 # we can't use snapctl to restart service, may be one day ....
 echo "Setting has been updated, restart service. $ sudo openhab.stop"
 
-
-# configure hook can be also run as part of install/update, migrate data if needed here, use
+# configure hook can be also run as part of update, migrate data if needed here, use
 # version key to track state
+
 VERSION=$(snapctl get version)
 snapctl set version $SNAP_VERSION
+
+# copy over data from snap if needed
+# conf
+if [ ! -d $SNAP_COMMON/conf ]; then
+    cp -rf $SNAP/conf $SNAP_COMMON/
+fi
+
 # check if we have userdata, if not this is new install
 if [ -d $SNAP_COMMON/userdata ]; then
     VERSION=$(snapctl get version)
     if [ "$VERSION" != "$SNAP_VERSION" ]; then
         cp -r -n $SNAP/userdata/etc $SNAP_COMMON/userdata/
-        cp -r -n $SNAP/conf/services $SNAP_COMMON/conf/
+        cp -r -n $SNAP/conf $SNAP_COMMON/
         rm -rf $SNAP_COMMON/userdata/cache
         rm -rf $SNAP_COMMON/userdata/tmp
         snapctl set version $SNAP_VERSION
