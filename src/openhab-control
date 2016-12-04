@@ -22,7 +22,7 @@ do
   if [ -z "${!key}" ]; then
       # use default value
       default_value="DEFAULT_$key"
-      echo "using default value: $key='${!default_value}'"
+      # echo "using default value: $key='${!default_value}'"
       export $key=${!default_value}
       # echo "export $key='${!def_value}'" >> $SETTINGS_FILE
   else
@@ -30,23 +30,5 @@ do
   fi
 done
 
-# copy over data from snap if needed
-# conf
-if [ ! -d $SNAP_COMMON/conf ]; then
-    cp -rf $SNAP/conf $SNAP_COMMON/
-fi
-
-# userdata
-if [ ! -d $SNAP_COMMON/userdata ]; then
-    cp -rf $SNAP/userdata $SNAP_COMMON/
-fi
-
-# runtime
-mkdir -p $SNAP_COMMON/karaf
-# TODO: this probably should be $SNAP_COMMON
-if [ ! -d $SNAP_COMMON/karaf/etc ]; then
-    cp -rf $SNAP/runtime/karaf/etc $SNAP_COMMON/karaf/
-fi
-
 DIRNAME=$SNAP
-exec "${DIRNAME}/runtime/karaf/bin/karaf" "${@}"
+exec "${DIRNAME}/runtime/bin/${@}"
