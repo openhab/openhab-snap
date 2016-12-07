@@ -47,9 +47,9 @@ else
         else
             # this is update: migrate data from previous version, minus cache, tmp
             echo "detected udpate: migrate data"
+            shopt -s dotglob; rm -rf $(dirname $SNAP_DATA)/$VERSION/userdata/cache/*
+            shopt -s dotglob; rm -rf $(dirname $SNAP_DATA)/$VERSION/userdata/tmp/*
             cp -rT $(dirname $SNAP_DATA)/$VERSION $SNAP_DATA
-            shopt -s dotglob; rm -rf $SNAP_DATA/userdata/cache/*
-            shopt -s dotglob; rm -rf $SNAP_DATA/userdata/tmp/*
             cp -r -n $SNAP/userdata/etc $SNAP_DATA/userdata/
             cp -r -n $SNAP/conf/services $SNAP_DATA/conf
             # add here more custom migration steps
