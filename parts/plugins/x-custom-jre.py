@@ -76,8 +76,7 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
                 copy_function=lambda src, dst: dump._link_or_copy(src, dst, self.installdir))
 
     def enable_cross_compilation(self):
-        if not self.zulu:
-            pass
+        pass
 
     def env(self, root):
         # set env based on java runtime we are using
