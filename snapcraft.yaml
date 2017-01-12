@@ -74,7 +74,7 @@ parts:
             amd64: http://cdn.azul.com/zulu/bin/zulu8.19.0.1-jdk8.0.112-linux_x64.tar.gz
             # i386:
 
-    # main control script, use this to control openhab
+    # helper scripts
     openhab-control:
         source: src
         plugin: dump
