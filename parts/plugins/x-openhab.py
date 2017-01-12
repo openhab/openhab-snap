@@ -33,7 +33,7 @@ class OpenHabPlugin(snapcraft.BasePlugin):
             maven._create_settings(settings_path)
             mvn_cmd += ['-s', settings_path]
 
-        self.run(mvn_cmd, self.sourcedir)
+        self.run(mvn_cmd, self.sourcedir + '/distributions/openhab')
 
         tree = ElementTree.parse(os.path.join(self.sourcedir, 'distributions/openhab/pom.xml' ))
         root = tree.getroot()
