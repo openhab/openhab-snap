@@ -14,19 +14,6 @@ logger = logging.getLogger(__name__)
 
 class OpenHabPlugin(snapcraft.BasePlugin):
 
-    @classmethod
-    def schema(cls):
-        schema = super().schema()
-        schema['properties']['distribution'] = {
-            'type': 'string'
-        }
-
-        # Inform Snapcraft of the properties associated with building. If these
-        # change in the YAML Snapcraft will consider the build step dirty.
-        schema['build-properties'].append('distribution')
-
-        return schema
-
     def __init__(self, name, options, project):
         super().__init__(name, options, project)
         self.build_packages.append('maven')
@@ -40,12 +27,12 @@ class OpenHabPlugin(snapcraft.BasePlugin):
     def build(self):
         snapcraft.BasePlugin.build(self)
 
-        tree = ElementTree.parse(os.path.join(self.sourcedir, 'distributions/openhab-' + self.options.distribution, 'pom.xml' ))
+        tree = ElementTree.parse(os.path.join(self.sourcedir, 'distributions/openhab/pom.xml' ))
         root = tree.getroot()
         parent = root.find('{http://maven.apache.org/POM/4.0.0}parent')
         version = parent.find('{http://maven.apache.org/POM/4.0.0}version').text
 
-        dist_package = os.path.join(self.sourcedir, 'distributions/openhab-online/target/openhab-' + self.options.distribution + '-' + version + '.tar.gz')
+        dist_package = os.path.join(self.sourcedir, 'distributions/openhab/target/openhab-' + version + '.tar.gz')
 
         sources.Tar(dist_package, self.builddir).pull()
         snapcraft.file_utils.link_or_copy_tree(
