@@ -27,6 +27,14 @@ class OpenHabPlugin(snapcraft.BasePlugin):
     def build(self):
         snapcraft.BasePlugin.build(self)
 
+        mvn_cmd = ['mvn', 'package']
+        if self._use_proxy():
+            settings_path = os.path.join(self.partdir, 'm2', 'settings.xml')
+            maven._create_settings(settings_path)
+            mvn_cmd += ['-s', settings_path]
+
+        self.run(mvn_cmd, self.sourcedir)
+
         tree = ElementTree.parse(os.path.join(self.sourcedir, 'distributions/openhab/pom.xml' ))
         root = tree.getroot()
         parent = root.find('{http://maven.apache.org/POM/4.0.0}parent')
@@ -47,13 +55,6 @@ class OpenHabPlugin(snapcraft.BasePlugin):
     # require internet access
     def pull(self):
         super().pull()
-        mvn_cmd = ['mvn', 'package']
-        if self._use_proxy():
-            settings_path = os.path.join(self.partdir, 'm2', 'settings.xml')
-            maven._create_settings(settings_path)
-            mvn_cmd += ['-s', settings_path]
-
-        self.run(mvn_cmd, self.sourcedir)
 
     def _modify_oh2_dir(self):
         logger.warning('Patching ' + self.installdir + '/runtime/bin/oh2_dir_layout')
