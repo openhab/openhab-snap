@@ -6,6 +6,12 @@ from snapcraft.plugins import dump
 
 logger = logging.getLogger(__name__)
 
+# Map ZULU releases to target architectures
+_ZULU_RELEASE_MAP = {
+    'armhf': 'https://www.azul.com/downloads/zulu/zdk-8-ga-linux_aarch32hf.tar.gz',
+    'amd64': 'https://www.azul.com/downloads/zulu/zdk-8-ga-linux_x64.tar.gz'
+}
+
 class JavaRuntimePlugin(snapcraft.BasePlugin):
 
     @classmethod
@@ -13,6 +19,7 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
         schema = super().schema()
         schema['properties']['zulu'] = {
             'type': 'object',
+            'default': {}
         }
 
         if 'source' in schema['required']:
@@ -43,9 +50,14 @@ class JavaRuntimePlugin(snapcraft.BasePlugin):
         self.stage_packages = []
         urls = {f: self.options.zulu[f] for f in self.options.zulu}
         if project.deb_arch in urls.keys():
-             logger.info('Using zulu java runtime for {!r}: {!r}'.format(project.deb_arch, urls[project.deb_arch]))
+             logger.info('Using zulu jre overide from snapcraft.yaml, arch:{!r}, url: {!r}'.format(project.deb_arch, urls[project.deb_arch]))
              self.zulu = True
              self.source = urls[project.deb_arch]
+             setattr(self.options, 'source', self.source)
+        elif project.deb_arch in _ZULU_RELEASE_MAP.keys():
+             logger.info('Using zulu java runtime, arch:{!r}, url: {!r}'.format(project.deb_arch, _ZULU_RELEASE_MAP[project.deb_arch]))
+             self.zulu = True
+             self.source = _ZULU_RELEASE_MAP[project.deb_arch]
              setattr(self.options, 'source', self.source)
         else:
              logger.info('We do not have zulu release for {!r}, defaulting to openjdk runtime'.format(self.project.deb_arch))
