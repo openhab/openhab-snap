@@ -27,13 +27,14 @@ class OpenHabPlugin(snapcraft.BasePlugin):
     def build(self):
         snapcraft.BasePlugin.build(self)
 
-        mvn_cmd = ['mvn', 'package']
+        mvn_cmd = ['mvn','-f','distributions/openhab/pom.xml', 'package']
         if self._use_proxy():
             settings_path = os.path.join(self.partdir, 'm2', 'settings.xml')
             maven._create_settings(settings_path)
             mvn_cmd += ['-s', settings_path]
 
-        self.run(mvn_cmd, self.sourcedir + '/distributions/openhab')
+        # self.run(mvn_cmd, self.sourcedir + '/distributions/openhab')
+        self.run(mvn_cmd, self.sourcedir)
 
         tree = ElementTree.parse(os.path.join(self.sourcedir, 'distributions/openhab/pom.xml' ))
         root = tree.getroot()
