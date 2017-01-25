@@ -1,6 +1,6 @@
 name: openhab
-version: "2.0.0.b5-0"
-summary: openhab 2.0 smart home server
+version: "2.1.0.-SNAPSHOT"
+summary: openhab smart home server
 description: |
  openHAB - a vendor and technology agnostic open source automation software for your home.
  webgui is available at user defined port(default is 8080 for http and 8443 for https)
@@ -58,7 +58,6 @@ parts:
         source: https://github.com/openhab/openhab-distro.git
         source-branch: master
         source-type: git
-#        source-tag: 2.0.0.b4
         plugin: openhab
         stage:
           - -start*
