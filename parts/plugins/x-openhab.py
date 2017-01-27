@@ -58,8 +58,6 @@ class OpenHabPlugin(snapcraft.BasePlugin):
         self._modify_setenv()
         self._fix_instance_path()
 
-    # to enable launchpad build, we need to call mvn build in pull stage as it
-    # require internet access
     def pull(self):
         super().pull()
         if platform.machine() == 'armv7l':
