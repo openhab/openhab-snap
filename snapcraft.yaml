@@ -42,10 +42,6 @@ apps:
         command: openhab-control stop
         plugs: [home, network, network-bind]
 
-    console:
-        command: openhab-control shell
-        plugs: [home, network, network-bind, process-control]
-
     client:
         command: openhab-control client
         plugs: [home, network, network-bind]
