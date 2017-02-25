@@ -58,7 +58,7 @@ parts:
         stage:
           - -start*
           - -runtime/bin/*.bat
-        snap:
+        prime:
           - -start*
           - -runtime/bin/*.bat
 
