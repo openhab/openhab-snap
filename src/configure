@@ -21,7 +21,9 @@ if [ "x$VERSION" == "x$SNAP_VERSION" ] && [ -d $SNAP_DATA/userdata ]; then
     echo -e "#!/bin/sh\n" > $SETTINGS_FILE
     for key in ${keys[@]}
     do
-      if value=$(snapctl get $key); then
+      # snappy is picky about key syntax, using mapping
+      MAP_KEY="KEY_$key"
+      if value=$(snapctl get ${!MAP_KEY}); then
           echo "export $key='$value'" >> $SETTINGS_FILE
       elif [ -d "${!key}" ]; then
           # store back value from SETTINGS_FILE
