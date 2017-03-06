@@ -15,7 +15,11 @@ do
     description="DESCRIPTION_$key"
     snappy_key="KEY_$key"
     echo -e "\t${!snappy_key}:   ${!description}"
-    echo -e "\t\tdefault value: '${!default_value}', current value: '${!key}'"
+    if [ "x" == "x${!key}" ]; then
+        echo -e "\t\tNo value set, using default value: '${!default_value}'"
+    else
+        echo -e "\t\tCurrent value set to: '${!key}', (default value: '${!default_value}')"
+    fi
 done
 echo -e "\nFor some changes to take effect openHAB server needs to be restarted"
 echo -e "to restart openHAB server: $ sudo systemctl restart snap.$SNAP_NAME.openhab"
