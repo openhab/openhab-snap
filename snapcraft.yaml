@@ -70,7 +70,7 @@ parts:
 
     # helper scripts
     openhab-control:
-        source: src
+        source: snap/src
         plugin: dump
         organize:
             openhab-control: bin/openhab-control

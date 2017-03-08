@@ -1,9 +1,7 @@
-parts/*
-!parts/plugins/
-parts/plugins/__pycache__/
+parts
 stage
-snap
 prime
+snap/plugins/__pycache__
 *.snap
 *.tar*
 .project
