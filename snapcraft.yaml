@@ -62,7 +62,7 @@ parts:
     # java run time
     jre:
         plugin: zulu-jre
-        # zulu supported arcghitectures(armhf, amd64) are already handled by plugin itself
+        # zulu supported architectures(armhf, amd64) are already handled by plugin itself
         # define here overide for pluging's defaults, or to add additional architectures
         # example overide:
         # zulu:
