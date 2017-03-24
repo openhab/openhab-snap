@@ -1,8 +1,9 @@
 #!/bin/sh
 
-# store here all configuration for openhab snap
+# store here all configuration options for openhab snap
+SNAP_NAME="openhab"
 
-# TODO: get rid of this workaround once above can be used
+# read configured settings first
 SETTINGS_FILE="$SNAP_COMMON/openhab_settings.sh"
 [ -f $SETTINGS_FILE ] && . $SETTINGS_FILE
 
@@ -12,5 +13,8 @@ keys="OPENHAB_HTTP_PORT OPENHAB_HTTPS_PORT"
 # default values
 DESCRIPTION_OPENHAB_HTTP_PORT="http port openhab is exposed on, atter change restart service"
 DEFAULT_OPENHAB_HTTP_PORT="8080"
+KEY_OPENHAB_HTTP_PORT="http-port"
+
 DESCRIPTION_OPENHAB_HTTPS_PORT="https port openhab is exposed on, atter change restart service"
 DEFAULT_OPENHAB_HTTPS_PORT="8443"
+KEY_OPENHAB_HTTPS_PORT="https-port"
