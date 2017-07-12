@@ -86,6 +86,8 @@ class OpenHabPlugin(snapcraft.BasePlugin):
         self._replaceAll(self.installdir+"/runtime/bin/karaf", "${KARAF_HOME}/instances", "${SNAP_DATA}/karaf/instances")
         logger.warning('Patching ' + self.installdir + '/runtime/bin/shell')
         self._replaceAll(self.installdir+"/runtime/bin/shell", "${KARAF_HOME}/instances", "${SNAP_DATA}/karaf/instances")
+        logger.warning('Patching ' + self.installdir + '/userdata/etc/org.apache.felix.fileinstall-deploy.cfg')
+        self._replaceAll(self.installdir + '/userdata/etc/org.apache.felix.fileinstall-deploy.cfg', "${openhab.home}/addons", "${karaf.data}/../addons")
 
     def _replaceAll(self,filePath,searchExp,replaceExp):
         for line in fileinput.input(filePath, inplace=1):

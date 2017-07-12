@@ -43,6 +43,7 @@ elif [ "x$LAST_REVISION" == "x" ] || [ ! -d $SNAP_COMMON/conf ]; then
     echo "detected fresh install or missing previous user data, populate with fresh one"
     cp -rf $SNAP/userdata $SNAP_DATA/
     cp -rf $SNAP/conf $SNAP_DATA/
+    [ ! -d $SNAP_DATA/addons ] && cp -r $SNAP/addons $SNAP_DATA/addons
 elif [ "x$LAST_REVISION" != "x$SNAP_REVISION" ] && [ "x$REVERT_REVISION" == "x$SNAP_REVISION" ]; then
     # this is rollback: update logging properties
     echo "detected rollback"
@@ -52,6 +53,7 @@ elif [ "x$LAST_REVISION" != "x$SNAP_REVISION" ] && [ "x$REVERT_REVISION" == "x$S
 elif [ "x$LAST_REVISION" != "x$SNAP_REVISION" ]; then
     # this is update:  update logging properties
     echo "detected udpate"
+    [ ! -d $SNAP_DATA/addons ] && cp -r $SNAP/addons $SNAP_DATA/addons
     # wipe cache and tmp for new version
     shopt -s dotglob; rm -rf $(dirname $SNAP_DATA)/$VERSION/userdata/cache/*
     shopt -s dotglob; rm -rf $(dirname $SNAP_DATA)/$VERSION/userdata/tmp/*
