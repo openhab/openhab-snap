@@ -1,5 +1,5 @@
 name: openhab
-version: "2.1.0-SNAPSHOT"
+version: "2.2.0-SNAPSHOT"
 summary: openHAB smart home server
 description: |
  openHAB - a vendor and technology agnostic open source automation software for your home.
