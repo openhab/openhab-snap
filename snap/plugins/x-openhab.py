@@ -54,9 +54,6 @@ class OpenHabPlugin(snapcraft.BasePlugin):
             self.builddir, self.installdir,
             copy_function=lambda src, dst: dump._link_or_copy(src, dst,
                                                          self.installdir))
-        self._modify_oh2_dir()
-        self._modify_setenv()
-        self._fix_instance_path()
 
     def pull(self):
         super().pull()
@@ -68,29 +65,3 @@ class OpenHabPlugin(snapcraft.BasePlugin):
 
             snapcraft.sources.get(self.jredir, None, Options())
 
-    def _modify_oh2_dir(self):
-        logger.warning('Patching ' + self.installdir + '/runtime/bin/oh2_dir_layout')
-        self._replaceAll(self.installdir+"/runtime/bin/oh2_dir_layout", "${OPENHAB_HOME}/conf", "${SNAP_DATA}/conf")
-        self._replaceAll(self.installdir+"/runtime/bin/oh2_dir_layout", "${OPENHAB_HOME}/userdata", "${SNAP_DATA}/userdata")
-
-    def _modify_setenv(self):
-        logger.warning('Patching ' + self.installdir + '/runtime/bin/setenv')
-        self._replaceAll(self.installdir+"/runtime/bin/setenv","-Dopenhab.logdir=${OPENHAB_LOGDIR}","-Dopenhab.logdir=${OPENHAB_LOGDIR}\n  -Duser.home=${SNAP_DATA}")
-
-    def _fix_instance_path(self):
-        logger.warning('Patching ' + self.installdir + '/runtime/bin/client')
-        self._replaceAll(self.installdir+"/runtime/bin/client", "${KARAF_HOME}/instances", "${SNAP_DATA}/karaf/instances")
-        logger.warning('Patching ' + self.installdir + '/runtime/bin/instance')
-        self._replaceAll(self.installdir+"/runtime/bin/instance", "${KARAF_HOME}/instances", "${SNAP_DATA}/karaf/instances")
-        logger.warning('Patching ' + self.installdir + '/runtime/bin/karaf')
-        self._replaceAll(self.installdir+"/runtime/bin/karaf", "${KARAF_HOME}/instances", "${SNAP_DATA}/karaf/instances")
-        logger.warning('Patching ' + self.installdir + '/runtime/bin/shell')
-        self._replaceAll(self.installdir+"/runtime/bin/shell", "${KARAF_HOME}/instances", "${SNAP_DATA}/karaf/instances")
-        logger.warning('Patching ' + self.installdir + '/userdata/etc/org.apache.felix.fileinstall-deploy.cfg')
-        self._replaceAll(self.installdir + '/userdata/etc/org.apache.felix.fileinstall-deploy.cfg', "${openhab.home}/addons", "${karaf.data}/../addons")
-
-    def _replaceAll(self,filePath,searchExp,replaceExp):
-        for line in fileinput.input(filePath, inplace=1):
-             if searchExp in line:
-                 line = line.replace(searchExp,replaceExp)
-             sys.stdout.write(line)

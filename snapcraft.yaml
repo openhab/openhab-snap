@@ -60,11 +60,22 @@ parts:
         prime:
           - -start*
           - -runtime/bin/*.bat
+        install: |
+            echo "Correcting writable paths"
+            sed -i -e 's#${OPENHAB_HOME}/conf#${SNAP_DATA}/conf#g' \
+                   -e 's#${OPENHAB_HOME}/userdata#${SNAP_DATA}/userdata#g' \
+                   $SNAPCRAFT_PART_INSTALL/runtime/bin/oh2_dir_layout
+            sed -i -e 's#-Dopenhab.logdir=${OPENHAB_LOGDIR}#-Dopenhab.logdir=${OPENHAB_LOGDIR}\n  -Duser.home=${SNAP_DATA}#g' \
+                   $SNAPCRAFT_PART_INSTALL/runtime/bin/setenv
+            find  $SNAPCRAFT_PART_INSTALL//runtime/bin/ -type f \
+                   -exec sed -i -e 's#${KARAF_HOME}/instances#${SNAP_DATA}/karaf/instances#g' {} \;
+            sed -i -e 's#${openhab.home}/addons#${karaf.data}/../addons#g' \
+                   $SNAPCRAFT_PART_INSTALL/userdata/etc/org.apache.felix.fileinstall-deploy.cfg
 
     # java run time
     jre:
         plugin: zulu-jre
-        # zulu supported architectures(armhf, amd64) are already handled by plugin itself
+        # zulu supported architectures(armhf, arm64,  amd64) are already handled by plugin itself
         # define here overide for pluging's defaults, or to add additional architectures
         # example overide:
         # zulu:
@@ -79,8 +90,3 @@ parts:
             connect-interfaces: bin/connect-interfaces
             config: bin/config
             openhab-help: bin/openhab-help
-            configure: meta/hooks/configure
-        stage:
-          - -plugins
-        prime:
-          - -plugins
