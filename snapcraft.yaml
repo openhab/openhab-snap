@@ -54,6 +54,14 @@ parts:
         source-type: git
         plugin: openhab
         build-packages: [libxml2-utils]
+        prepare: |
+          echo "Checking if there is new tag to build from"
+          LAST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          if [ "$(git rev-parse @)" = "$(git rev-parse ${LAST_TAG}~)" ]; then \
+              echo "Building from tag"; \
+              git checkout ${LAST_TAG}; \
+              git -C ../src checkout ${LAST_TAG}; \
+          fi
         prime:
           - -start*
           - -runtime/bin/*.bat
