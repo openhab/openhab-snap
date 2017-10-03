@@ -54,9 +54,6 @@ parts:
         source-type: git
         plugin: openhab
         build-packages: [libxml2-utils]
-        stage:
-          - -start*
-          - -runtime/bin/*.bat
         prime:
           - -start*
           - -runtime/bin/*.bat
