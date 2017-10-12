@@ -1,9 +1,10 @@
 name: openhab
-version: "2.1.0-SNAPSHOT"
+version: "0"
+version-script: xmllint --xpath '/*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="version"]/text()' parts/openhab/src/pom.xml
 summary: openHAB smart home server
 description: |
  openHAB - a vendor and technology agnostic open source automation software for your home.
- An image of Ubuntu Core with some USB items added to the gadget snap is available at 
+ An image of Ubuntu Core with some USB items added to the gadget snap is available at
  http://people.canonical.com/~okubik/openhab/
  If you would like to add a USB controller or other device, please raise an issue at git
  https://github.com/openhab/openhab-snap/
@@ -56,9 +57,15 @@ parts:
         source-branch: master
         source-type: git
         plugin: openhab
-        stage:
-          - -start*
-          - -runtime/bin/*.bat
+        build-packages: [libxml2-utils]
+        prepare: |
+          echo "Checking if there is new tag to build from"
+          LAST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          if [ "$(git rev-parse @)" = "$(git rev-parse ${LAST_TAG}~)" ]; then \
+              echo "Building from tag"; \
+              git checkout ${LAST_TAG}; \
+              git -C ../src checkout ${LAST_TAG}; \
+          fi
         prime:
           - -start*
           - -runtime/bin/*.bat
@@ -77,7 +84,7 @@ parts:
     # java run time
     jre:
         plugin: zulu-jre
-        # zulu supported architectures(armhf, amd64) are already handled by plugin itself
+        # zulu supported architectures(armhf, arm64,  amd64) are already handled by plugin itself
         # define here overide for pluging's defaults, or to add additional architectures
         # example overide:
         # zulu:
@@ -85,15 +92,7 @@ parts:
 
     # helper scripts
     openhab-control:
-        source: snap
+        source: bin
         plugin: dump
         organize:
-            openhab-control: bin/openhab-control
-            connect-interfaces: bin/connect-interfaces
-            config: bin/config
-            openhab-help: bin/openhab-help
-            configure: meta/hooks/configure
-        stage:
-          - -plugins
-        prime:
-          - -plugins
+            '*' : bin/

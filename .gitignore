@@ -2,6 +2,7 @@ parts
 stage
 prime
 snap/plugins/__pycache__
+snap/.snapcraft
 *.snap
 *.tar*
 .project
