@@ -3,6 +3,10 @@ version: "2.1.0-SNAPSHOT"
 summary: openHAB smart home server
 description: |
  openHAB - a vendor and technology agnostic open source automation software for your home.
+ An image of Ubuntu Core with some USB items added to the gadget snap is available at 
+ http://people.canonical.com/~okubik/openhab/
+ If you would like to add a USB controller or other device, please raise an issue at git
+ https://github.com/openhab/openhab-snap/
  webgui is available at user defined port(default is 8080 for http and 8443 for https)
  http://<snap device address>:{specified http port}
  https:///<snap device address>:{specified https port}
@@ -58,6 +62,17 @@ parts:
         prime:
           - -start*
           - -runtime/bin/*.bat
+        install: |
+            echo "Correcting writable paths"
+            sed -i -e 's#${OPENHAB_HOME}/conf#${SNAP_DATA}/conf#g' \
+                   -e 's#${OPENHAB_HOME}/userdata#${SNAP_DATA}/userdata#g' \
+                   $SNAPCRAFT_PART_INSTALL/runtime/bin/oh2_dir_layout
+            sed -i -e 's#-Dopenhab.logdir=${OPENHAB_LOGDIR}#-Dopenhab.logdir=${OPENHAB_LOGDIR}\n  -Duser.home=${SNAP_DATA}#g' \
+                   $SNAPCRAFT_PART_INSTALL/runtime/bin/setenv
+            find  $SNAPCRAFT_PART_INSTALL//runtime/bin/ -type f \
+                   -exec sed -i -e 's#${KARAF_HOME}/instances#${SNAP_DATA}/karaf/instances#g' {} \;
+            sed -i -e 's#${openhab.home}/addons#${karaf.data}/../addons#g' \
+                   $SNAPCRAFT_PART_INSTALL/userdata/etc/org.apache.felix.fileinstall-deploy.cfg
 
     # java run time
     jre:

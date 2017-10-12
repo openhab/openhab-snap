@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# read openhab config
+source $SNAP/snap/config
+
+
+for key in ${keys[@]}
+do
+    default_value="DEFAULT_$key"
+    description="DESCRIPTION_$key"
+    snappy_key="KEY_$key"
+    value=$(snapctl get ${!snappy_key})
+    if [ "x$value" == "x" ]; then
+        echo -e "$key=${!default_value} (default value)"
+        export $key=${!default_value}
+    else
+        echo -e "$key=$value"
+        export $key=$value
+    fi
+done
+
+DIRNAME=$SNAP
+exec "${DIRNAME}/runtime/bin/${@}"

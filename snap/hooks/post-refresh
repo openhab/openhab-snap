@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -x
+
+exec >> $SNAP_COMMON/hook.log 2>&1
+echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
+
+# first call  install hook to make sure we have all directories we need
+./install
+
+# wipe cache and tmp for new version
+shopt -s dotglob; rm -rf $(dirname $SNAP_DATA)/$VERSION/userdata/cache/*
+shopt -s dotglob; rm -rf $(dirname $SNAP_DATA)/$VERSION/userdata/tmp/*
+
+# add here more custom migration steps

@@ -68,6 +68,7 @@ class OpenHabPlugin(snapcraft.BasePlugin):
 
             snapcraft.sources.get(self.jredir, None, Options())
 
+
     def _modify_oh2_dir(self):
         logger.warning('Patching ' + self.installdir + '/runtime/bin/oh2_dir_layout')
         self._replaceAll(self.installdir+"/runtime/bin/oh2_dir_layout", "${OPENHAB_HOME}/conf", "${SNAP_DATA}/conf")

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -x
+
+exec >> $SNAP_COMMON/hook.log 2>&1
+echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
+
+# handle fresh istall
+[ ! -d $SNAP_DATA/userdata ] &&  cp -rf $SNAP/userdata $SNAP_DATA/
+[ ! -d $SNAP_DATA/conf ] && cp -rf $SNAP/conf $SNAP_DATA/
+[ ! -d $SNAP_DATA/addons ] && cp -r $SNAP/addons $SNAP_DATA/addons
