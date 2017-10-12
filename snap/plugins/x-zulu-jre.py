@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 # Map ZULU releases to target architectures
 _ZULU_RELEASE_MAP = {
     'armhf': 'https://www.azul.com/downloads/zulu/zdk-8-ga-linux_aarch32hf.tar.gz',
-    'arm64': 'https://www.azul.com/downloads/zulu/zdk-8-ga-linux_aarch64.tar.gz',
     'amd64': 'https://www.azul.com/downloads/zulu/zdk-8-ga-linux_x64.tar.gz'
 }
 
