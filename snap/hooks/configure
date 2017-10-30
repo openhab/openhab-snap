@@ -5,8 +5,6 @@ set -x
 exec >> $SNAP_COMMON/hook.log 2>&1
 echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
-# read openhab config
-. $SNAP/bin/config
 # settings were altered by user, safest way to get them applied is to restart service
+snapctl restart ${SNAP_NAME}.openhab 2>&1 || true
 
-# call snapctl restart for the service once this is available
