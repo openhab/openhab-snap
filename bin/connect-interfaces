@@ -3,7 +3,13 @@
 echo "This is helper script and it shoud be called by user directly!"
 echo "Connecting interfaces for openhab"
 
-snap connect openhab:home
-snap connect openhab:process-control
-gadget_snap=$(for i in $(snap list | awk '{print $1}'); do [[ ! -z $(snap info $i | grep gadget) ]] && echo "$i"; done 2> /dev/null)
-snap connect openhab:serial-port $gadget_snap
+snap connect openhab:home core
+snap connect openhab:network-bind core
+
+echo -e "serial interface needs to be connected manually, as there could be multiple candidates to connect to"
+echo -e "example to connect to zwave interface provided by gadget"
+echo -e "to list all available serial-port slots and plugs call"
+echo -e "\t $ snap interfaces -i=serial-port"
+echo -e "Connect openHAB plug to all desired slots like this"
+echo -e "\t $ snap connect openhab:serial-port <gadget snap name>:<slog name>"
+echo -e "\t e.g. $ snap connect openhab:serial-port pi3-openhab:aeon-z-wave-g5"
