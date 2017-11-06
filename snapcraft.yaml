@@ -54,7 +54,7 @@ apps:
 parts:
     openhab:
         source: https://github.com/openhab/openhab-distro.git
-        source-branch: master
+        source-tag: 2.1.0
         source-type: git
         plugin: openhab
         build-packages: [libxml2-utils]
