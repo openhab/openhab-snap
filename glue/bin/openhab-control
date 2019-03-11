@@ -1,23 +1,19 @@
 #!/bin/bash
 
-# read openhab config
-source $SNAP/snap/config
+# set_config ${key} ${ENV} ${VALUE} ${DEFAULT} ${DESCRIPTION}
+set_config() {
+    local VAL=${3}
+    [ -z "${VAL}" ] && VAL=${4}
+    echo "${2}=${VAL}"
+    eval export ${2}=\"${VAL}\"
+}
 
+source ${SNAP}/bin/snap-config
+read_snap_config
 
-for key in ${keys[@]}
-do
-    default_value="DEFAULT_$key"
-    description="DESCRIPTION_$key"
-    snappy_key="KEY_$key"
-    value=$(snapctl get ${!snappy_key})
-    if [ "x$value" == "x" ]; then
-        echo -e "$key=${!default_value} (default value)"
-        export $key=${!default_value}
-    else
-        echo -e "$key=$value"
-        export $key=$value
-    fi
-done
-
+# clear tmp file
+rm -rf ${SNAP_DATA}/tmp/*
 DIRNAME=$SNAP
+
 exec "${DIRNAME}/runtime/bin/${@}"
+

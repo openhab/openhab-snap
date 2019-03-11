@@ -1,0 +1,63 @@
+{
+	"openhab": {
+		"http-port": {
+			"description": "http port openHAB is exposed on, after change restart service",
+			"env": "OPENHAB_HTTP_PORT",
+			"default": "8080"
+		},
+		"http-address": {
+			"description": "Settings to limit access to openHAB to only certain network interfaces",
+			"env": "OPENHAB_HTTP_ADDRESS",
+			"default": ""
+		},
+		"https-port": {
+			"description": "https port openHABb is exposed on, after change restart service",
+			"env": "OPENHAB_HTTPS_PORT",
+			"default": "8443"
+		},
+		"backups": {
+			"description": "openHAB backup directory",
+			"env": "OPENHAB_BACKUPS",
+			"default": "${SNAP_COMMON}/backups"
+		}
+	},
+	"java": {
+		"min-mem": {
+			"description": "Minimum memory for the JVM",
+			"env": "JAVA_MIN_MEM",
+			"default": "128M"
+		},
+		"max-mem": {
+			"description": "Maximum memory for the JVM",
+			"env": "JAVA_MAX_MEM",
+			"default": "512M"
+		},
+		"extra-opt": {
+			"description": "Additional JVM options",
+			"env": "EXTRA_JAVA_OPTS",
+			"default": ""
+		}
+	},
+	"karaf": {
+		"debug": {
+			"description": "Enable debug mode",
+			"env": "KARAF_DEBUG",
+			"default": ""
+		},
+		"opts": {
+			"description": "Additional available Karaf options",
+			"env": "KARAF_OPTS",
+			"default": ""
+		},
+		"redirect": {
+			"description": "Enable/set the std/err redirection when using bin/start",
+			"env": "KARAF_REDIRECT",
+			"default": ""
+		},
+		"system-opts": {
+			"description": "First citizen Karaf options",
+			"env": "KARAF_SYSTEM_OPTS",
+			"default": ""
+		}
+	}
+}
