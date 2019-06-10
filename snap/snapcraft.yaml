@@ -26,6 +26,15 @@ environment:
     OPENHAB_USERDATA: ${SNAP_DATA}/userdata
     OPENHAB_LOGDIR:   ${SNAP_DATA}/userdata/logs
     OPENHAB_BACKUPS:  ${SNAP_COMMON}/backups
+    INFLUXDB_META_DIR: $SNAP_DATA/userdata/influxdb/meta
+    INFLUXDB_DATA_DIR: $SNAP_DATA/userdata/influxdb/data
+    INFLUXDB_DATA_WAL_DIR: $SNAP_DATA/userdata/influxdb/wal
+
+hooks:
+    configure:
+      plugs:
+          - network
+          - network-bind
 
 apps:
     openhab:
@@ -97,6 +106,21 @@ apps:
         command: bin/openhab-help
         adapter: none
 
+    influxd:
+        command: bin/influxd -config $SNAP_DATA/conf/influxdb.conf
+        adapter: none
+        daemon: simple
+        restart-condition: always
+        plugs:
+            - network-bind
+            - network
+
+    influx:
+        command: bin/influx
+        adapter: none
+        plugs:
+            - network-bind
+            - network
 parts:
     openhab:
         source: https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F2.3.0%2Fopenhab-2.3.0.tar.gz
@@ -207,3 +231,44 @@ parts:
         source: glue
         plugin: dump
 
+    influxdb:
+        source: https://github.com/influxdata/influxdb.git
+        source-tag: v1.7.5
+        build-snaps: ["go"]
+        source-depth: 1
+        plugin: python
+        override-build: |
+            export PATH="$SNAPCRAFT_STAGE/bin:$PATH"
+            export GOPATH=$(readlink -f $(pwd)/../go)
+            export GOIMPORTPATH=$GOPATH/src/github.com/influxdata/influxdb/
+            mkdir -p $GOIMPORTPATH
+            cp -r ./* $GOIMPORTPATH
+            cp -r .git $GOIMPORTPATH
+            cd $GOIMPORTPATH
+            python build.py --outdir $SNAPCRAFT_PART_INSTALL/bin
+            mkdir -p $SNAPCRAFT_PART_INSTALL/conf
+            cp etc/config.sample.toml $SNAPCRAFT_PART_INSTALL/conf/influxdb.conf
+        stage-packages:
+            - libdb5.3-dev
+        stage:
+            - conf/influxdb.conf
+            - bin/influxd
+            - bin/influx
+        build-packages:
+            - software-properties-common
+            - wget
+            - git
+            - mercurial
+            - make
+            - ruby
+            - ruby-dev
+            - autoconf
+            - libtool
+            - build-essential
+            - rpm
+            - zip
+            - python
+            - python-boto
+            - asciidoc
+            - xmlto
+            - docbook-xsl

@@ -59,5 +59,82 @@
 			"env": "KARAF_SYSTEM_OPTS",
 			"default": ""
 		}
-	}
+	},
+        "influxdb": {
+                "openhab-binding": {
+                        "enabled": {
+                                "description": "Enable build in influx DB built in for persistency. related binding has to be installed in opnehab, enabled = true",
+                                "env": "OPENHAB_INFLUXDB",
+                                "default": "false"
+                        },
+                        "user": "openhab"
+                },
+                "bind-address": {
+                        "description": "bind address, eg. 8086",
+                        "env": "INFLUXDB_BIND_ADDRESS",
+                        "default": "127.0.0.1:8086"
+                },
+                "meta": {
+                        "logging-enabled": {
+                                "description": "Enables the logging of messages from the meta service.",
+                                "env": "INFLUXDB_META_LOGGING_ENABLED",
+                                "default": "false"
+                        }
+                },
+                "data": {
+                        "wal-fsync-delay": {
+                                "description": "The amount of time that a write waits before fsyncing",
+                                "env": "INFLUXDB_DATA_WAL_FSYNC_DELAY",
+                                "default": "10ms"
+                        },
+                        "cache-snapshot-memory-size": {
+                                "description": "size at which the engine will snapshot the cache and write it to a TSM file",
+                                "env": "INFLUXDB_DATA_CACHE_SNAPSHOT_MEMORY_SIZE",
+                                "default": "25M"
+                        },
+                        "query-log-enabled": {
+                                "description": "Enables verbose logging of additional debug information within the TSM engine and WAL.",
+                                "env": "INFLUXDB_DATA_QUERY_LOG_ENABLED",
+                                "default": "true"
+                        }
+                },
+                "http": {
+                        "enable": {
+                                "description": "Determines whether HTTP request logging is enabled. To disable logging, set the value to false",
+                                "env": "INFLUXDB_HTTP_LOG_ENABLED",
+                                "default": "true"
+                        },
+                        "flux-enabled": {
+                                "description": "Determines whether the HTTP endpoints are enabled.",
+                                "env": "INFLUXDB_HTTP_LOG_ENABLED",
+                                "default": "false"
+                        },
+                        "bind-address": {
+                                "description": "The bind address (port) used by the HTTP service.",
+                                "env": "INFLUXDB_HTTP_BIND_ADDRESS",
+                                "default": ":8086"
+                        },
+                        "auth-enabled": {
+                                "description": "Determines whether user authentication is enabled over HTTP and HTTPS. To require authentication, set the value to true.",
+                                "env": "INFLUXDB_HTTP_AUTH_ENABLED",
+                                "default": "true"
+                        },
+                        "log-enabled": {
+                                "description": "Determines whether HTTP request logging is enabled. To disable logging, set the value to false",
+                                "env": "INFLUXDB_HTTP_LOG_ENABLED",
+                                "default": "false"
+                        },
+                        "unix-socket-enabled": {
+                                "description": "Enable HTTP service over the UNIX domain socket. To enable HTTP service over the UNIX domain socket, set the value to true.",
+                                "env": "INFLUXDB_HTTP_UNIX_SOCKET_ENABLED",
+                                "default": "true"
+                        },
+                        "bind-socket": {
+                                "description": "The path of the UNIX domain socket.",
+                                "env": "INFLUXDB_HTTP_UNIX_BIND_SOCKET",
+                                "default": "${SNAP_DATA}/run/influxdb.sock"
+                        }
+                }
+
+        }
 }

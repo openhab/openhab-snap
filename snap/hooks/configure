@@ -5,6 +5,53 @@ set -x
 exec >> $SNAP_COMMON/hook.log 2>&1
 echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
+# set_config ${key} ${ENV} ${VALUE} ${DEFAULT} ${DESCRIPTION}
+set_config() {
+    local VAL=${3}
+    [ -z "${VAL}" ] && VAL=${4}
+    echo "${2}=${VAL}"
+    eval export ${2}=\"${VAL}\"
+}
+
+source ${SNAP}/bin/snap-config
+read_snap_config
+
+# check if we need to run influxdb
+if [ "true" == "$(snapctl get influxdb.openhab-binding.enabled.value)" ]; then
+    snapctl start --enable ${SNAP_NAME}.influxd
+    # make sure we have correct settings in service config
+    if [ -f ${SNAP_DATA}/conf/services/influxdb.cfg ] && [ "false" == "$(snapctl get influxdb.openhab-binding.configured)" ]; then
+        echo "Configuring ${SNAP_DATA}/conf/services/influxdb.cfg"
+        PASSWD=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
+        USER="$(snapctl get get influxdb.openhab-binding.user)"
+        # INFLUXDB_HTTP_BIND_ADDRESS can be just port, make sure we have host and port separate
+        if [[ $INFLUXDB_HTTP_BIND_ADDRESS == :* ]]; then
+            HOST="127.0.0.1"
+            PROTOCOL="http://"
+            PORT="$(echo ${INFLUXDB_HTTP_BIND_ADDRESS} | cut -c 2-)"
+        else
+            PROTOCOL="$(echo ${INFLUXDB_HTTP_BIND_ADDRESS} | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+            url="$(echo ${INFLUXDB_HTTP_BIND_ADDRESS/${pr}/})"
+            PORT="$(echo $url | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
+            HOST="$(echo ${url} | sed 's/:.*//')"
+        fi
+        # first create database
+        ${SNAP}/bin/influx -port ${PORT} -host ${HOST} -execute "CREATE DATABASE openhab"
+        # create user
+        ${SNAP}/bin/influx -port ${PORT} -host ${HOST} -execute "CREATE USER ${USER} WITH PASSWORD '${PASSWD}' WITH ALL PRIVILEGES"
+        # update settings in ${SNAP_DATA}/conf/services/influxdb.cfg
+        sed -i \
+          -e 's|.*url.*|url='"${PROTOCOL}"''"${HOST}"':'"${PORT}"'|g' \
+          -e 's|.*user=.*|user='"${USER}"'|g' \
+          -e 's|.*password=.*|password='"${PASSWD}"'|g' \
+          -e 's|.*db=.*|db=openhab|g' \
+          ${SNAP_DATA}/conf/services/influxdb.cfg
+        snapctl set influxdb.openhab-binding.configured=true
+    fi
+else
+    snapctl set influxdb.openhab-binding.configured=false
+    snapctl stop --disable ${SNAP_NAME}.influxd
+fi
+
 # settings were altered by user, safest way to get them applied is to restart service
 snapctl restart ${SNAP_NAME}.openhab 2>&1 || true
-

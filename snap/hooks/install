@@ -13,3 +13,7 @@ cp -rf $SNAP/addons $SNAP_DATA/addons
 # fresh install no need to migrate config
 snapctl set conf-migrated=true
 
+# make sure there is config for influxdb
+if [ ! -e $SNAP_DATA/conf/influxdb.conf ]; then
+    cp $SNAP/conf/influxdb.conf $SNAP_DATA/conf/influxdb.conf
+fi
