@@ -15,6 +15,7 @@ description: |
 confinement: strict
 grade: stable
 adopt-info: openhab
+base: core18
 
 environment:
     JAVA_HOME:        ${SNAP}/jre
