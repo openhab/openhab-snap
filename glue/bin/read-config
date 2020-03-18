@@ -12,4 +12,16 @@ set_config() {
 source ${SNAP}/bin/snap-config
 read_snap_config
 
+# INFLUXDB_HTTP_BIND_ADDRESS can be just port, make sure we have host and port separate
+if [[ $INFLUXDB_HTTP_BIND_ADDRESS == :* ]]; then
+    export HOST="127.0.0.1"
+    export PROTOCOL="http://"
+    export PORT="$(echo ${INFLUXDB_HTTP_BIND_ADDRESS} | cut -c 2-)"
+else
+    export PROTOCOL="$(echo ${INFLUXDB_HTTP_BIND_ADDRESS} | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+    url="$(echo ${INFLUXDB_HTTP_BIND_ADDRESS/${pr}/})"
+    export PORT="$(echo $url | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
+    export HOST="$(echo ${url} | sed 's/:.*//')"
+fi
+
 exec "$@"
