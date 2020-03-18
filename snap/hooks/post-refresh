@@ -5,11 +5,164 @@ set -x
 exec >> $SNAP_COMMON/hook.log 2>&1
 echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
-# first call  install hook to make sure we have all directories we need
-./install
+# migrate snap configuration to new schema
+#    old key                new key
+# http-port             openhab.http-port
+# https-port            openhab.https-port
+# openhab-backups       openhab.backups
+# openhab-http-address  openhab.http-address
+migrate_conf() {
+   val=$(snapctl get ${1})
+   if [ -n "${val}" ]; then
+       snapctl set ${2}=${val}
+       snapctl set ${1}=
+   fi
+}
 
-# wipe cache and tmp for new version
-shopt -s dotglob; rm -rf $(dirname $SNAP_DATA)/$VERSION/userdata/cache/*
-shopt -s dotglob; rm -rf $(dirname $SNAP_DATA)/$VERSION/userdata/tmp/*
+if [ "$(snapctl get conf-migrated)" != "true" ]; then
+    migrate_conf http-port             openhab.http-port
+    migrate_conf https-port             openhab.https-port
+    migrate_conf openhab-backups       openhab.backups
+    migrate_conf openhab-http-address  openhab.http-address
+    snapctl set conf-migrated=true
+fi
+
+# corect paths in properties
+SNAP_DATA_BASE=$(dirname ${SNAP_DATA})
+find ${SNAP_DATA}/userdata/config -type f | \
+  xargs sed -i -e 's#'"${SNAP_DATA_BASE}"'/.*/#'"${SNAP_DATA}"'/#g'
+
+rm -rf ${SNAP_DATA}/userdata/tmp
+
+
+# use openHAB own update steps
+getVersionNumber() {
+  firstPart="$(echo "$1" | awk -F'.' '{print $1}')"
+  secondPart="$(echo "$1" | awk -F'.' '{print $2}')"
+  thirdPart="$(echo "$1" | awk -F'.' '{print $3}')"
+  thirdPart="${thirdPart%%-*}"
+  echo $((firstPart*10000+secondPart*100+thirdPart))
+}
+
+runCommand() {
+    string="$1"
+    string="$(echo "$string" | sed "s:\$OPENHAB_USERDATA:${OPENHAB_USERDATA:?}:g")"
+    string="$(echo "$string" | sed "s:\$OPENHAB_CONF:${OPENHAB_CONF:?}:g")"
+    string="$(echo "$string" | sed "s:\$OPENHAB_HOME:${WorkingDir:?}:g")"
+
+    command="$(echo "$string" | awk -F';' '{print $1}')"
+    param1="$(echo "$string" | awk -F';' '{print $2}')"
+    param2="$(echo "$string" | awk -F';' '{print $3}')"
+
+    case $command in
+    'DEFAULT')
+      # Just rename the file, the update process adds back the new version
+      echo "  Adding '.bak' to $param1"
+      mv "$param1" "$param1.bak"
+    ;;
+    'DELETE')
+      # We should be strict and specific here, i.e only delete one file.
+      if [ -f "$param1" ]; then
+        echo "  Deleting File: $param1"
+        rm -f "$param1"
+      fi
+    ;;
+    'DELETEDIR')
+      # We should be strict and specific here, i.e only delete one directory.
+      if [ -d "$param1" ]; then
+        echo "  Deleting Directory: $param1"
+        rm -rf "$param1"
+      fi
+    ;;
+    'MOVE')
+      echo "  Moving:   From $param1 to $param2"
+      mv "$param1" "$param2"
+    ;;
+    'NOTE')  printf '  \033[32mNote:\033[m     %s\n' "$param1";;
+    'ALERT') printf '  \033[31mWarning:\033[m  %s\n' "$param1";;
+    esac
+}
+
+scanVersioningList() {
+  Section="$1"
+  VersionMessage="$2"
+  InSection=false
+  InNewVersion=false
+
+  ## Read the file line by line.
+  while IFS= read -r Line
+  do
+    case $Line in
+    '')
+      continue
+    ;;
+    ## Flag to run the relevant [[section]] only.
+    "[[$Section]]")
+      InSection=true
+    ;;
+    ## Stop reading the file if another [[section]] starts.
+    "[["*"]]")
+      if $InSection; then
+        break
+      fi
+    ;;
+    ## Detect the [version] and execute the line if relevant.
+    '['*'.'*'.'*']')
+      if $InSection; then
+        LineVersion="$(echo "$Line" | awk -F'[][]' '{print $2}')"
+        LineVersionNumber=$(getVersionNumber "$LineVersion")
+        if [ "$CurrentVersionNumber" -lt "$LineVersionNumber" ]; then
+          InNewVersion=true
+          echo ""
+          echo "$VersionMessage $LineVersion:"
+        else
+          InNewVersion=false
+        fi
+      fi
+    ;;
+    *)
+      if $InSection && $InNewVersion; then
+        runCommand "$Line"
+      fi
+    ;;
+    esac
+  done < "${SNAP}/runtime/bin/update.lst"
+}
+
+CurrentVersion="$(awk '/openhab-distro/{print $3}' "$OPENHAB_USERDATA/etc/version.properties")"
+NewVersion="$(awk '/openhab-distro/{print $3}' "$SNAP/userdata/etc/version.properties")"
+CurrentVersionNumber=$(getVersionNumber "$CurrentVersion")
+case $CurrentVersion in
+  *"-"* | *"."*"."*"."*) CurrentVersionNumber=$((CurrentVersionNumber-1));;
+esac
+
+echo -e "Upgrading from version ${CurrentVersion} to ${NewVersion}"
+WorkingDir=${SNAP}
+
+# delete files which should not be migrated
+while IFS= read -r fileName
+do
+  fullPath="${SNAP_DATA}/userdata/etc/$fileName"
+  if [ -f "$fullPath" ]; then
+    rm "$fullPath"
+  fi
+done < "${SNAP}/runtime/bin/userdata_sysfiles.lst"
+
+## Clearing the cache and tmp folders is necessary for upgrade.
+echo "Clearing cache..."
+rm -rf "${SNAP_DATA}/userdata/cache"
+rm -rf "${SNAP_DATA}/userdata/tmp"
+
+# copy new files WITHOUT replacing any existing files.
+cp -n ${SNAP}/userdata ${SNAP_DATA}/
+cp -n ${SNAP}/conf ${SNAP_DATA}/
+# copy addons, ignore error if they do not exist
+rm ${SNAP_DATA}/addons/openhab-addons-*.kar ${SNAP_DATA}/addons/openhab-addons-legacy-*.kar 2>/dev/null || :
+cp ${SNAP}/addons/openhab-addons-*.kar ${SNAP_DATA}/addons 2>/dev/null || :
+cp ${SNAP}/addons/openhab-addons-legacy-*.kar ${SNAP_DATA}/addons 2>/dev/null || :
+
+# copy over etc files
+cp -r "${SNAP}/userdata/etc" "${SNAP_DATA}/userdata/"
+scanVersioningList "POST" "Performing post-update tasks for version"
 
 # add here more custom migration steps
