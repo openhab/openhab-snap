@@ -12,8 +12,4 @@ set_config() {
 source ${SNAP}/bin/snap-config
 read_snap_config
 
-# clear tmp file
-rm -rf ${SNAP_DATA}/tmp/*
-DIRNAME=$SNAP
-
-exec "${DIRNAME}/runtime/bin/${@}"
+exec "$@"

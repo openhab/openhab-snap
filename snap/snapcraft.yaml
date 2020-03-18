@@ -29,8 +29,11 @@ environment:
 
 apps:
     openhab:
-        command: openhab-control karaf server
-        stop-command: openhab-control stop
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/karaf server
+        stop-command: runtime/bin/stop
         daemon: simple
         plugs:
             - home
@@ -43,7 +46,10 @@ apps:
             - i2c
 
     start:
-        command: openhab-control karaf
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/karaf
         plugs:
             - home
             - network
@@ -53,13 +59,13 @@ apps:
             - gpio
             - spi
             - i2c
-    clean:
-        command: openhab-control karaf clean
-        plugs:
-            - network
 
-    debug:
-        command: openhab-control karaf debug
+    karaf:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/karaf
+        adapter: none
         plugs:
             - home
             - network
@@ -71,22 +77,48 @@ apps:
             - i2c
 
     status:
-        command: openhab-control status
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/status
         plugs:
             - network
 
     stop:
-        command: openhab-control stop
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/stop
         plugs:
             - network
 
     client:
-        command: openhab-control client
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/client
         plugs:
             - network
 
+    backup:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/backup
+        plugs:
+            - home
+
+    restore:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/restore
+        plugs:
+            - home
+
     help:
-        command: openhab-help
+        command: bin/openhab-help
+        adapter: none
 
 parts:
     openhab:
