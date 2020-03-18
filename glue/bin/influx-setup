@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# make sure we have correct settings in service config
+if [ "true" == "$(snapctl get influxdb.binding-openhab.enabled)" ]; then
+    configured=$(snapctl get influxdb.binding-openhab.configured)
+    if [ -z "${configured}" -o "false" == "${configured}" ]; then
+        echo "Configuring ${SNAP_DATA}/conf/services/influxdb.cfg"
+        # first create admin user
+        PASSWD=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
+
+        # database might not be fully running, retry 3 times
+        n=0
+        user=${INFLUX_USERNAME}
+        unset INFLUX_PASSWORD INFLUX_USERNAME
+        until [ "$n" -ge "3" ]
+        do
+            ${SNAP}/bin/influx \
+                -port ${PORT} \
+                -host ${HOST} \
+                -execute "CREATE USER ${user} WITH PASSWORD '${PASSWD}' WITH ALL PRIVILEGES" \
+              && break
+            n=$[$n+1]
+            sleep 3
+        done
+        # exit if account is not created
+        if [ "$n" -ge "3" ]; then
+            echo "Failed to create admin user"
+            exit 0
+        fi
+
+        snapctl set influxdb.binding-openhab.user-admin.password="\"${PASSWD}\""
+        export INFLUX_PASSWORD="${PASSWD}"
+        export INFLUX_USERNAME="${user}"
+        # create openHAB database
+        ${SNAP}/bin/influx \
+            -port ${PORT} \
+            -host ${HOST} \
+            -execute "CREATE DATABASE ${OPENHAB_INFLUXDB_DB_NAME}"
+
+        ## create openhab user
+        OPENHAB_INFLUXDB_PASSWORD=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
+        ${SNAP}/bin/influx \
+            -port ${PORT} \
+            -host ${HOST} \
+            -execute "CREATE USER ${OPENHAB_INFLUXDB_USER} WITH PASSWORD '${OPENHAB_INFLUXDB_PASSWORD}'"
+        snapctl set influxdb.binding-openhab.user-openhab.user="\"${OPENHAB_INFLUXDB_USER}\""
+        snapctl set influxdb.binding-openhab.user-openhab.password="\"${OPENHAB_INFLUXDB_PASSWORD}\""
+        # give openHAB user permission to writo to the database
+        ${SNAP}/bin/influx \
+            -port ${PORT} \
+            -host ${HOST} \
+            -execute "GRANT ALL ON ${OPENHAB_INFLUXDB_DB_NAME} TO ${OPENHAB_INFLUXDB_USER}"
+
+        ## create grafana user
+        GRAFANA_INFLUXDB_PASSWD=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
+        ${SNAP}/bin/influx \
+            -port ${PORT} \
+            -host ${HOST} \
+            -execute "CREATE USER ${GRAFANA_INFLUXDB_USER} WITH PASSWORD '${GRAFANA_INFLUXDB_PASSWD}'"
+        snapctl set influxdb.binding-openhab.user-grafana.password="\"${GRAFANA_INFLUXDB_PASSWD}\""
+        snapctl set influxdb.binding-openhab.user-grafana.user="\"${GRAFANA_INFLUXDB_USER}\""
+        # give grafana user permission to read from the database
+        ${SNAP}/bin/influx \
+            -port ${PORT} \
+            -host ${HOST} \
+            -execute "GRANT READ ON ${OPENHAB_INFLUXDB_DB_NAME} TO ${GRAFANA_INFLUXDB_USER}"
+
+        # db is now configured
+        snapctl set influxdb.binding-openhab.configured=true
+    fi
+
+    # check if there is config file present and configure it
+    if [ -f ${SNAP_DATA}/conf/services/influxdb.cfg ]; then
+        # update settings in ${SNAP_DATA}/conf/services/influxdb.cfg
+        OPENHAB_INFLUXDB_PASSWORD=$(snapctl get influxdb.binding-openhab.user-openhab.password)
+        sed -i \
+            -e 's|.*url.*|url='"${PROTOCOL}"''"${HOST}"':'"${PORT}"'|g' \
+            -e 's|.*user=.*|user='"${OPENHAB_INFLUXDB_USER}"'|g' \
+            -e 's|.*password=.*|password='"${OPENHAB_INFLUXDB_PASSWORD}"'|g' \
+            -e 's|.*db=.*|db='"${OPENHAB_INFLUXDB_DB_NAME}"'|g' \
+            ${SNAP_DATA}/conf/services/influxdb.cfg
+        # disable this service, nothing else to do
+        snapctl stop --disable ${SNAP_INSTANCE_NAME}.influx-setup || true
+    fi
+else
+    snapctl stop --disable ${SNAP_INSTANCE_NAME}.influx-setup || true
+fi
