@@ -18,6 +18,9 @@ confinement: strict
 grade: stable
 base: core18
 
+environment:
+    JAVA_HOME:        ${SNAP}/jre
+    PATH:             ${SNAP}/jre/bin:${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:${PATH}
 apps:
     openhab:
         command: openhab-control karaf server
@@ -84,15 +87,41 @@ parts:
 
     # java run time
     jre:
-        plugin: zulu-jre
-        # zulu supported architectures(armhf, arm64,  amd64) are already handled by plugin itself
-        # define here overide for pluging's defaults, or to add additional architectures
-        # example overide:
-        # zulu:
-        #     amd64: https://www.azul.com/downloads/zulu/zdk-8-ga-linux_x64.tar.gz
+        plugin: nil
+        override-pull: |
+          echo "SNAPCRAFT_ARCH_TRIPLET=${SNAPCRAFT_ARCH_TRIPLET}"
+          if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=8&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jdk" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=8&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "x86_64-linux-gnu" ]; then
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=8&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          else
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=8&ext=tar.gz&os=linux&arch=x86&hw_bitness=32&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          fi
+          tar_link=$(jq -r '.url' ${SNAPCRAFT_PART_INSTALL}/zulu_version.json)
+          echo "tar_link=[${tar_link}]"
+          wget -O zulu.tar.gz ${tar_link}
+          tar -C ${SNAPCRAFT_PART_INSTALL} -xf zulu.tar.gz --strip 1
+        stage:
+          - -bin
+          - -demo
+          - -include
+          - -lib
+          - -man
+          - -sample
+          - -src.zip
+          - -jre/lib/aarch32/client/libjvm.diz
+          - -jre/lib/aarch64/server/libjvm.diz
+        organize:
+          LICENSE: LICENSE_ZULU
+          release: release_zulu
 
     # glue
     glue:
         source: glue
         plugin: dump
 
+build-packages:
+    - jq
+    - curl
