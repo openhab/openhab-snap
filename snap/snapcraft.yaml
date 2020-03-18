@@ -20,6 +20,13 @@ base: core18
 environment:
     JAVA_HOME:        ${SNAP}/jre
     PATH:             ${SNAP}/jre/bin:${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:${PATH}
+    LD_LIBRARY_PATH:  ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${SNAPCRAFT_ARCH_TRIPLET}:${SNAP}/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
+    OPENHAB_CONF:     ${SNAP_DATA}/conf
+    OPENHAB_RUNTIME:  ${SNAP}/runtime
+    OPENHAB_USERDATA: ${SNAP_DATA}/userdata
+    OPENHAB_LOGDIR:   ${SNAP_DATA}/userdata/logs
+    OPENHAB_BACKUPS:  ${SNAP_COMMON}/backups
+
 apps:
     openhab:
         command: openhab-control karaf server
