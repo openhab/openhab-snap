@@ -120,6 +120,36 @@ apps:
         command: bin/openhab-help
         adapter: none
 
+    influxd:
+        adapter: full
+        command-chain:
+            - bin/read-config
+        command: bin/influxd
+        daemon: simple
+        restart-condition: always
+        plugs:
+            - network-bind
+            - network
+        environment:
+            INFLUXDB_CONFIG_PATH: $SNAP_DATA/conf/influxdb.conf
+
+    influx-setup:
+        adapter: full
+        command-chain:
+            - bin/read-config
+        command: bin/influx-setup
+        daemon: oneshot
+        plugs:
+            - network
+
+    influx:
+        adapter: full
+        command-chain:
+            - bin/read-config
+        command: bin/influx-run-client
+        plugs:
+            - network
+
 parts:
     openhab:
         source: https://ci.openhab.org/job/openHAB-Distribution/lastSuccessfulBuild/artifact/distributions/openhab/target/*zip*/target.zip
