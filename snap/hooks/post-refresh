@@ -166,3 +166,8 @@ cp -r "${SNAP}/userdata/etc" "${SNAP_DATA}/userdata/"
 scanVersioningList "POST" "Performing post-update tasks for version"
 
 # add here more custom migration steps
+
+# make sure there is config for influxdb
+if [ ! -e $SNAP_DATA/conf/influxdb.conf ]; then
+    cp $SNAP/conf/influxdb.conf $SNAP_DATA/conf/influxdb.conf
+fi

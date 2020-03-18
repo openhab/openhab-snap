@@ -27,6 +27,12 @@ environment:
     OPENHAB_LOGDIR:   ${SNAP_DATA}/userdata/logs
     OPENHAB_BACKUPS:  ${SNAP_COMMON}/backups
 
+hooks:
+    configure:
+      plugs:
+          - network
+          - network-bind
+
 apps:
     openhab:
         adapter: none
