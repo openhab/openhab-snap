@@ -90,9 +90,8 @@ parts:
         # zulu:
         #     amd64: https://www.azul.com/downloads/zulu/zdk-8-ga-linux_x64.tar.gz
 
-    # helper scripts
-    openhab-control:
-        source: bin
+    # glue
+    glue:
+        source: glue
         plugin: dump
-        organize:
-            '*' : bin/
+
