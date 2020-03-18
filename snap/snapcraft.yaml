@@ -1,6 +1,4 @@
 name: openhab
-version: "0"
-version-script: xmllint --xpath '/*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="version"]/text()' parts/openhab/src/pom.xml
 summary: openHAB smart home server
 description: |
  openHAB - a vendor and technology agnostic open source automation software for your home.
@@ -16,6 +14,7 @@ description: |
 
 confinement: strict
 grade: stable
+adopt-info: openhab
 base: core18
 
 environment:
@@ -57,33 +56,86 @@ apps:
 
 parts:
     openhab:
-        source: https://github.com/openhab/openhab-distro.git
-        source-tag: 2.1.0
-        source-type: git
-        plugin: openhab
-        build-packages: [libxml2-utils]
-        prepare: |
-          echo "Checking if there is new tag to build from"
-          LAST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          if [ "$(git rev-parse @)" = "$(git rev-parse ${LAST_TAG}~)" ]; then \
-              echo "Building from tag"; \
-              git checkout ${LAST_TAG}; \
-              git -C ../src checkout ${LAST_TAG}; \
-          fi
-        prime:
+        plugin: nil
+        stage:
           - -start*
           - -runtime/bin/*.bat
-        install: |
+        organize:
+          LICENSE: LICENSE_OPENHAB
+        build-packages:
+            - wget
+        override-pull: |
+            wget -O latest_version https://bintray.com/openhab/mvn/openhab-distro/_latestVersion
+            version=$(grep \'version\': latest_version | awk '{print $2}' | sed -e "s/'//g" -e 's/,//g')
+            echo "determined version:${version}"
+            wget -O openhab.tar.gz https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F${version}%2Fopenhab-${version}.tar.gz
+            tar -xf openhab.tar.gz
+            rm openhab.tar.gz
+        override-build: |
+            cp -r * ${SNAPCRAFT_PART_INSTALL}
+            VERSION=$(grep 'openhab-distro' ${SNAPCRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $3}')
+            BUILD_NO=$(grep 'build-no' ${SNAPCRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $4}' | cut -c 2-)
+            [ -n "$(echo $VERSION | grep SNAPSHOT)" ] && VERSION="${VERSION}-bn${BUILD_NO}"
+            snapcraftctl set-version ${VERSION}
             echo "Correcting writable paths"
-            sed -i -e 's#${OPENHAB_HOME}/conf#${SNAP_DATA}/conf#g' \
-                   -e 's#${OPENHAB_HOME}/userdata#${SNAP_DATA}/userdata#g' \
-                   $SNAPCRAFT_PART_INSTALL/runtime/bin/oh2_dir_layout
-            sed -i -e 's#-Dopenhab.logdir=${OPENHAB_LOGDIR}#-Dopenhab.logdir=${OPENHAB_LOGDIR}\n  -Duser.home=${SNAP_DATA}#g' \
-                   $SNAPCRAFT_PART_INSTALL/runtime/bin/setenv
+            sed -i '/-Dopenhab.logdir=${OPENHAB_LOGDIR}/a -Duser.home=${SNAP_DATA}/' $SNAPCRAFT_PART_INSTALL/runtime/bin/setenv
             find  $SNAPCRAFT_PART_INSTALL//runtime/bin/ -type f \
                    -exec sed -i -e 's#${KARAF_HOME}/instances#${SNAP_DATA}/karaf/instances#g' {} \;
             sed -i -e 's#${openhab.home}/addons#${karaf.data}/../addons#g' \
                    $SNAPCRAFT_PART_INSTALL/userdata/etc/org.apache.felix.fileinstall-deploy.cfg
+
+    # dependency stage packages to include in the snap, handle cross compilation support here
+    dependencies:
+        plugin: nil
+        stage-packages:
+            - to armhf:
+                - libxi6:armhf
+                - libxrender1:armhf
+                - libxtst6:armhf
+                - libxcb1:armhf
+                - libxext6:armhf
+                - libxdmcp6:armhf
+                - libxau6:armhf
+                - libx11-6:armhf
+                - zip:armhf
+                - jq:armhf
+                - libasound2:armhf
+            - to arm64:
+                - libxi6:arm64
+                - libxrender1:arm64
+                - libxtst6:arm64
+                - libxcb1:arm64
+                - libxext6:arm64
+                - libxdmcp6:arm64
+                - libxau6:arm64
+                - libx11-6:arm64
+                - zip:arm64
+                - jq:arm64
+                - libasound2:arm64
+            - to i386:
+                - libxi6:i386
+                - libxrender1:i386
+                - libxtst6:i386
+                - libxcb1:i386
+                - libxext6:i386
+                - libxdmcp6:i386
+                - libxau6:i386
+                - libx11-6:i386
+                - zip:i386
+                - jq:i386
+                - libasound2:i386
+            - to amd64:
+                - libxi6:amd64
+                - libxrender1:amd64
+                - libxtst6:amd64
+                - libxcb1:amd64
+                - libxext6:amd64
+                - libxdmcp6:amd64
+                - libxau6:amd64
+                - libx11-6:amd64
+                - zip:amd64
+                - jq:amd64
+                - libasound2:amd64
 
     # java run time
     jre:
