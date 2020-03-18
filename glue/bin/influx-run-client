@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# run influx client with port and host
+${SNAP}/bin/influx -port ${PORT} -host ${HOST}
