@@ -10,3 +10,4 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 # settings were altered by user, safest way to get them applied is to restart service
 
 # call snapctl restart for the service once this is available
+snapctl restart openhab 2>&1 || true
