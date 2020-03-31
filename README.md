@@ -4,7 +4,7 @@ openHAB packaged as a snap for Ubuntu core. It consists of:
   - java runtime
   - openHAB run time
 
-## How to install
+## How to install
 
 This openHAB snap is available in the Ubuntu store for release series 16 (e.g. Ubuntu 16.04). Install via:
 
