@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# set_config ${key} ${ENV} ${VALUE} ${DEFAULT} ${DESCRIPTION}
+set_config() {
+    local VAL=${3}
+    [ -z "${VAL}" ] && VAL=${4}
+    if [ -n "${VAL}" ]; then
+      eval export ${2}=\"${VAL}\"
+    fi
+}
+
+source ${SNAP}/bin/snap-config
+read_snap_config
+
+# INFLUXDB_HTTP_BIND_ADDRESS can be just port, make sure we have host and port separate
+if [[ $INFLUXDB_HTTP_BIND_ADDRESS == :* ]]; then
+    export HOST="127.0.0.1"
+    export PROTOCOL="http://"
+    export PORT="$(echo ${INFLUXDB_HTTP_BIND_ADDRESS} | cut -c 2-)"
+else
+    export PROTOCOL="$(echo ${INFLUXDB_HTTP_BIND_ADDRESS} | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+    url="$(echo ${INFLUXDB_HTTP_BIND_ADDRESS/${pr}/})"
+    export PORT="$(echo $url | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
+    export HOST="$(echo ${url} | sed 's/:.*//')"
+fi
+
+# if there is influxdb.cfg file created,
+# automatically enable builtin influxdb integration
+if [ -f ${SNAP_DATA}/conf/services/influxdb.cfg ]; then
+  # if integration is disabled, do not auto enable it
+  influx_enabled=$(snapctl get influxdb.binding-openhab.enabled)
+  if [ "false" != "${influx_enabled}" ] || [ "true" != "${influx_enabled}" ]; then
+    # automatically disable builtin influxdb
+    snapctl set influxdb.binding-openhab.enabled="true"
+    snapctl start --enable ${SNAP_INSTANCE_NAME}.influxd
+    snapctl start --enable ${SNAP_INSTANCE_NAME}.influx-setup
+  fi
+else
+  # if persistent plugin was removed, no need to run influxdb anymore
+  influx_enabled=$(snapctl get influxdb.binding-openhab.enabled)
+  if [ "true" != "${influx_enabled}" ]; then
+    snapctl unset influxdb.binding-openhab.enabled
+    snapctl stop --disable ${SNAP_INSTANCE_NAME}.influxd
+    snapctl stop --disable ${SNAP_INSTANCE_NAME}.influxd-setup
+  fi
+fi
+
+exec "$@"

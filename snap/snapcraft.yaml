@@ -1,0 +1,314 @@
+name: openhab
+summary: openHAB smart home server
+description: |
+ openHAB - a vendor and technology agnostic open source automation software for your home.
+ An image of Ubuntu Core with some USB items added to the gadget snap is available at
+ http://people.canonical.com/~okubik/openhab/
+ If you would like to add a USB controller or other device, please raise an issue at git
+ https://github.com/openhab/openhab-snap/
+ webgui is available at user defined port(default is 8080 for http and 8443 for https)
+ http://<snap device address>:{specified http port}
+ https:///<snap device address>:{specified https port}
+ Port settings can be altered by user, refer to:
+ $ openhab.help
+
+confinement: strict
+grade: stable
+adopt-info: openhab
+base: core18
+
+environment:
+    JAVA_HOME:        ${SNAP}/jre
+    PATH:             ${SNAP}/jre/bin:${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:${PATH}
+    LD_LIBRARY_PATH:  ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${SNAPCRAFT_ARCH_TRIPLET}:${SNAP}/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
+    OPENHAB_CONF:     ${SNAP_DATA}/conf
+    OPENHAB_RUNTIME:  ${SNAP}/runtime
+    OPENHAB_USERDATA: ${SNAP_DATA}/userdata
+    OPENHAB_LOGDIR:   ${SNAP_DATA}/userdata/logs
+    OPENHAB_BACKUPS:  ${SNAP_COMMON}/backups
+
+hooks:
+    configure:
+      plugs:
+          - network
+          - network-bind
+
+apps:
+    openhab:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/karaf server
+        stop-command: runtime/bin/stop
+        daemon: simple
+        plugs:
+            - home
+            - network
+            - network-bind
+            - serial-port
+            - raw-usb
+            - gpio
+            - spi
+            - i2c
+
+    start:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/karaf
+        plugs:
+            - home
+            - network
+            - network-bind
+            - serial-port
+            - raw-usb
+            - gpio
+            - spi
+            - i2c
+
+    karaf:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/karaf
+        adapter: none
+        plugs:
+            - home
+            - network
+            - network-bind
+            - serial-port
+            - raw-usb
+            - gpio
+            - spi
+            - i2c
+
+    status:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/status
+        plugs:
+            - network
+
+    stop:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/stop
+        plugs:
+            - network
+
+    client:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/client
+        plugs:
+            - network
+
+    backup:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/backup
+        plugs:
+            - home
+
+    restore:
+        adapter: none
+        command-chain:
+            - bin/read-config
+        command: runtime/bin/restore
+        plugs:
+            - home
+
+    help:
+        command: bin/openhab-help
+        adapter: none
+
+    influxd:
+        adapter: full
+        command-chain:
+            - bin/read-config
+        command: bin/influxd
+        daemon: simple
+        restart-condition: always
+        plugs:
+            - network-bind
+            - network
+        environment:
+            INFLUXDB_CONFIG_PATH: $SNAP_DATA/conf/influxdb.conf
+
+    influx-setup:
+        adapter: full
+        command-chain:
+            - bin/read-config
+        command: bin/influx-setup
+        daemon: oneshot
+        plugs:
+            - network
+
+    influx:
+        adapter: full
+        command-chain:
+            - bin/read-config
+        command: bin/influx-run-client
+        plugs:
+            - network
+
+parts:
+    openhab:
+        source: https://ci.openhab.org/job/openHAB-Distribution/lastSuccessfulBuild/artifact/distributions/openhab/target/*zip*/target.zip
+        plugin: nil
+        stage:
+          - -start*
+          - -runtime/bin/*.bat
+        organize:
+          LICENSE: LICENSE_OPENHAB
+        override-build: |
+            tar xf target/openhab-*.tar.gz -C ${SNAPCRAFT_PART_INSTALL}
+            VERSION=$(grep 'openhab-distro' ${SNAPCRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $3}')
+            BUILD_NO=$(grep 'build-no' ${SNAPCRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $4}' | cut -c 2-)
+            [ -n "$(echo $VERSION | grep SNAPSHOT)" ] && VERSION="${VERSION}-bn${BUILD_NO}"
+            snapcraftctl set-version ${VERSION}
+            echo "Correcting writable paths"
+            sed -i '/-Dopenhab.logdir=${OPENHAB_LOGDIR}/a -Duser.home=${SNAP_DATA}/' $SNAPCRAFT_PART_INSTALL/runtime/bin/setenv
+            find  $SNAPCRAFT_PART_INSTALL//runtime/bin/ -type f \
+                   -exec sed -i -e 's#${KARAF_HOME}/instances#${SNAP_DATA}/karaf/instances#g' {} \;
+            sed -i -e 's#${openhab.home}/addons#${karaf.data}/../addons#g' \
+                   $SNAPCRAFT_PART_INSTALL/userdata/etc/org.apache.felix.fileinstall-deploy.cfg
+
+    # dependency stage packages to include in the snap, handle cross compilation support here
+    dependencies:
+        plugin: nil
+        stage-packages:
+            - to armhf:
+                - libxi6:armhf
+                - libxrender1:armhf
+                - libxtst6:armhf
+                - libxcb1:armhf
+                - libxext6:armhf
+                - libxdmcp6:armhf
+                - libxau6:armhf
+                - libx11-6:armhf
+                - zip:armhf
+                - jq:armhf
+                - libasound2:armhf
+            - to arm64:
+                - libxi6:arm64
+                - libxrender1:arm64
+                - libxtst6:arm64
+                - libxcb1:arm64
+                - libxext6:arm64
+                - libxdmcp6:arm64
+                - libxau6:arm64
+                - libx11-6:arm64
+                - zip:arm64
+                - jq:arm64
+                - libasound2:arm64
+            - to i386:
+                - libxi6:i386
+                - libxrender1:i386
+                - libxtst6:i386
+                - libxcb1:i386
+                - libxext6:i386
+                - libxdmcp6:i386
+                - libxau6:i386
+                - libx11-6:i386
+                - zip:i386
+                - jq:i386
+                - libasound2:i386
+            - to amd64:
+                - libxi6:amd64
+                - libxrender1:amd64
+                - libxtst6:amd64
+                - libxcb1:amd64
+                - libxext6:amd64
+                - libxdmcp6:amd64
+                - libxau6:amd64
+                - libx11-6:amd64
+                - zip:amd64
+                - jq:amd64
+                - libasound2:amd64
+
+    # java run time
+    jre:
+        plugin: nil
+        override-pull: |
+          echo "SNAPCRAFT_ARCH_TRIPLET=${SNAPCRAFT_ARCH_TRIPLET}"
+          if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=8&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jdk" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=8&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "x86_64-linux-gnu" ]; then
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=8&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          else
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=8&ext=tar.gz&os=linux&arch=x86&hw_bitness=32&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          fi
+          tar_link=$(jq -r '.url' ${SNAPCRAFT_PART_INSTALL}/zulu_version.json)
+          echo "tar_link=[${tar_link}]"
+          wget -O zulu.tar.gz ${tar_link}
+          tar -C ${SNAPCRAFT_PART_INSTALL} -xf zulu.tar.gz --strip 1
+        stage:
+          - -bin
+          - -demo
+          - -include
+          - -lib
+          - -man
+          - -sample
+          - -src.zip
+          - -jre/lib/aarch32/client/libjvm.diz
+          - -jre/lib/aarch64/server/libjvm.diz
+        organize:
+          LICENSE: LICENSE_ZULU
+          release: release_zulu
+
+    # glue
+    glue:
+        source: glue
+        plugin: dump
+
+    influxdb:
+        source: https://github.com/influxdata/influxdb.git
+        source-tag: v1.7.5
+        build-snaps: ["go"]
+        source-depth: 1
+        plugin: python
+        override-build: |
+            export PATH="$SNAPCRAFT_STAGE/bin:$PATH"
+            export GOPATH=$(readlink -f $(pwd)/../go)
+            export GOIMPORTPATH=$GOPATH/src/github.com/influxdata/influxdb/
+            mkdir -p $GOIMPORTPATH
+            cp -r ./* $GOIMPORTPATH
+            cp -r .git $GOIMPORTPATH
+            cd $GOIMPORTPATH
+            python build.py --outdir $SNAPCRAFT_PART_INSTALL/bin
+            mkdir -p $SNAPCRAFT_PART_INSTALL/conf
+            cp etc/config.sample.toml $SNAPCRAFT_PART_INSTALL/conf/influxdb.conf
+        stage-packages:
+            - libdb5.3-dev
+        stage:
+            - conf/influxdb.conf
+            - bin/influxd
+            - bin/influx
+
+build-packages:
+    - jq
+    - curl
+    - software-properties-common
+    - wget
+    - git
+    - mercurial
+    - make
+    - ruby
+    - ruby-dev
+    - autoconf
+    - libtool
+    - build-essential
+    - rpm
+    - zip
+    - python
+    - python-boto
+    - asciidoc
+    - xmlto
+    - docbook-xsl

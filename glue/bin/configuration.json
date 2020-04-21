@@ -1,0 +1,203 @@
+{
+  "openhab": {
+    "http-port": {
+      "description": "http port openHAB is exposed on, after change restart service",
+      "env": "OPENHAB_HTTP_PORT",
+      "default": "8080"
+    },
+    "http-address": {
+      "description": "Settings to limit access to openHAB to only certain network interfaces",
+      "env": "OPENHAB_HTTP_ADDRESS",
+      "default": ""
+    },
+    "https-port": {
+      "description": "https port openHABb is exposed on, after change restart service",
+      "env": "OPENHAB_HTTPS_PORT",
+      "default": "8443"
+    },
+    "backups": {
+      "description": "openHAB backup directory",
+      "env": "OPENHAB_BACKUPS",
+      "default": "${SNAP_COMMON}/backups"
+    }
+  },
+  "java": {
+    "min-mem": {
+      "description": "Minimum memory for the JVM",
+      "env": "JAVA_MIN_MEM",
+      "default": "128M"
+    },
+    "max-mem": {
+      "description": "Maximum memory for the JVM",
+      "env": "JAVA_MAX_MEM",
+      "default": "512M"
+    },
+    "extra-opt": {
+      "description": "Additional JVM options",
+      "env": "EXTRA_JAVA_OPTS",
+      "default": ""
+    }
+  },
+  "karaf": {
+    "debug": {
+      "description": "Enable debug mode",
+      "env": "KARAF_DEBUG",
+      "default": ""
+    },
+    "opts": {
+      "description": "Additional available Karaf options",
+      "env": "KARAF_OPTS",
+      "default": ""
+    },
+    "redirect": {
+      "description": "Enable/set the std/err redirection when using bin/start",
+      "env": "KARAF_REDIRECT",
+      "default": ""
+    },
+    "system-opts": {
+      "description": "First citizen Karaf options",
+      "env": "KARAF_SYSTEM_OPTS",
+      "default": ""
+    }
+  },
+  "influxdb": {
+    "binding-openhab": {
+      "enabled": {
+        "description": "Enable build in influx DB built in for persistency. Related binding has to be installed in openHAB, enabled = true",
+        "env": "OPENHAB_INFLUXDB",
+        "default": "false"
+      },
+      "database-name": {
+        "description": "openHAB db name",
+        "env": "OPENHAB_INFLUXDB_DB_NAME",
+        "default": "openhab_db"
+      },
+      "user-admin": {
+        "user": {
+          "description": "Name of admin user",
+          "env": "INFLUX_USERNAME",
+          "default": "admin"
+        },
+        "password": {
+          "description": "Admin user password",
+          "env": "INFLUX_PASSWORD",
+          "default": ""
+        }
+      },
+      "user-openhab": {
+        "user": {
+          "description": "openHAB db user to be created for openHAB to access database",
+          "env": "OPENHAB_INFLUXDB_USER",
+          "default": "openhab"
+        }
+      },
+      "user-grafana": {
+        "user": {
+          "description": "Grafana db user to be created for Grafana to access database",
+          "env": "GRAFANA_INFLUXDB_USER",
+          "default": "grafana"
+        }
+      }
+    },
+    "conf": {
+      "bind-address": {
+        "description": "Bind address to use for the RPC service for backup and restore.",
+        "env": "INFLUXDB_BIND_ADDRESS",
+        "default": ""
+      },
+      "meta": {
+        "dir": {
+          "description": "Where the metadata/raft database is stored",
+          "env": "INFLUXDB_META_DIR",
+          "default": "$SNAP_DATA/userdata/influxdb/meta"
+        },
+        "retention-autocreate": {
+          "description": "Automatically create a default retention policy when creating a database.",
+          "env": "INFLUXDB_META_RETENTION_AUTOCREATE",
+          "default": ""
+        },
+        "logging-enabled": {
+          "description": "If log messages are printed for the meta service",
+          "env": "INFLUXDB_META_LOGGING_ENABLED",
+          "default": ""
+        }
+      },
+      "data": {
+        "dir": {
+          "description": "The directory where the TSM storage engine stores TSM files.",
+          "env": "INFLUXDB_DATA_DIR",
+          "default": "$SNAP_DATA/userdata/influxdb/data"
+        },
+        "wal-dir": {
+          "description": "The directory where the TSM storage engine stores WAL files.",
+          "env": "INFLUXDB_DATA_WAL_DIR",
+          "default": "$SNAP_DATA/userdata/influxdb/wal"
+        },
+        "wal-fsync-delay": {
+          "description": "The amount of time that a write waits before fsyncing. Use a duration greater than 0 to batch up multiple fsync calls.",
+          "env": "INFLUXDB_DATA_WAL_FSYNC_DELAY",
+          "default": "0s"
+        }
+      },
+      "retention": {
+        "enabled": {
+          "description": "Set to false to prevent InfluxDB from enforcing retention policies.",
+          "env": "INFLUXDB_RETENTION_ENABLED",
+          "default": "true"
+        },
+        "check-interval": {
+          "description": "The time interval at which InfluxDB checks to enforce a retention policy.",
+          "env": "INFLUXDB_RETENTION_CHECK_INTERVAL",
+          "default": "30m0s"
+        }
+      },
+      "http": {
+        "enabled": {
+          "description": "Determines whether the HTTP endpoints are enabled. To disable access to the HTTP endpoints, set the value to false",
+          "env": "INFLUXDB_HTTP_ENABLED",
+          "default": "true"
+        },
+        "flux-enabled": {
+          "description": "Determines whether the Flux query endpoint is enabled. To enable the use of Flux queries, set the value to true.",
+          "env": "INFLUXDB_HTTP_FLUX_ENABLED",
+          "default": ""
+        },
+        "bind-address": {
+          "description": "The bind address (port) used by the HTTP service.",
+          "env": "INFLUXDB_HTTP_BIND_ADDRESS",
+          "default": ":8086"
+        },
+        "auth-enabled": {
+          "description": "Determines whether user authentication is enabled over HTTP and HTTPS. To require authentication, set the value to true.",
+          "env": "INFLUXDB_HTTP_AUTH_ENABLED",
+          "default": "true"
+        },
+        "https-enabled": {
+          "description": "Determines whether HTTPS is enabled. To enable HTTPS, set the value to true.",
+          "env": "INFLUXDB_HTTP_HTTPS_ENABLED",
+          "default": ""
+        },
+        "https-certificate": {
+          "description": "The path of the SSL certificate file to use when HTTPS is enabled.",
+          "env": "INFLUXDB_HTTP_HTTPS_CERTIFICATE",
+          "default": ""
+        },
+        "https-private-key": {
+          "description": "Use a separate private key location. If only the https-certificate is specified, the httpd service will try to load the private key from the https-certificate file.",
+          "env": "INFLUXDB_HTTP_HTTPS_PRIVATE_KEY",
+          "default": ""
+        },
+        "unix-socket-enabled": {
+          "description": "Enable HTTP service over the UNIX domain socket. To enable HTTP service over the UNIX domain socket, set the value to true.",
+          "env": "INFLUXDB_HTTP_UNIX_SOCKET_ENABLED",
+          "default": ""
+        },
+        "bind-socket": {
+          "description": "The path of the UNIX domain socket.",
+          "env": "INFLUXDB_HTTP_UNIX_BIND_SOCKET",
+          "default": "${SNAP_DATA}/run/influxdb.sock"
+        }
+      }
+    }
+  }
+}
