@@ -2,7 +2,10 @@
 
 set -x
 
-exec >> $SNAP_COMMON/hook.log 2>&1
+## Clean log files first
+rm ${SNAP_DATA}/userdata/logs/*
+
+exec > "${SNAP_DATA}/userdata/logs/update.log" 2>&1
 echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
 # migrate snap configuration to new schema
@@ -32,10 +35,8 @@ SNAP_DATA_BASE=$(dirname ${SNAP_DATA})
 find ${SNAP_DATA}/userdata/config -type f | \
   xargs sed -i -e 's#'"${SNAP_DATA_BASE}"'/.*/#'"${SNAP_DATA}"'/#g'
 
-rm -rf ${SNAP_DATA}/userdata/tmp
 
-
-# use openHAB own update steps
+## use openHAB own update steps
 getVersionNumber() {
   firstPart="$(echo "$1" | awk -F'.' '{print $1}')"
   secondPart="$(echo "$1" | awk -F'.' '{print $2}')"
@@ -53,6 +54,7 @@ runCommand() {
     command="$(echo "$string" | awk -F';' '{print $1}')"
     param1="$(echo "$string" | awk -F';' '{print $2}')"
     param2="$(echo "$string" | awk -F';' '{print $3}')"
+    param3="$(echo "$string" | awk -F';' '{print $4}')"
 
     case $command in
     'DEFAULT')
@@ -77,6 +79,13 @@ runCommand() {
     'MOVE')
       echo "  Moving:   From $param1 to $param2"
       mv "$param1" "$param2"
+    ;;
+    'REPLACE')
+      # Avoid error if file does not exist
+      if [ -f "$param3" ]; then
+        echo "  Replacing: String $param1 to $param2 in file $param3"
+        sed -i'.bak' -e "s:$param1:$param2:g" "$param3"
+      fi
     ;;
     'NOTE')  printf '  \033[32mNote:\033[m     %s\n' "$param1";;
     'ALERT') printf '  \033[31mWarning:\033[m  %s\n' "$param1";;
@@ -129,6 +138,13 @@ scanVersioningList() {
   done < "${SNAP}/runtime/bin/update.lst"
 }
 
+## influxdb
+# make sure there is config for influxdb
+if [ ! -e $SNAP_DATA/conf/influxdb.conf ]; then
+    cp $SNAP/conf/influxdb.conf $SNAP_DATA/conf/influxdb.conf
+fi
+
+## openHAB version migration
 CurrentVersion="$(awk '/openhab-distro/{print $3}' "$OPENHAB_USERDATA/etc/version.properties")"
 NewVersion="$(awk '/openhab-distro/{print $3}' "$SNAP/userdata/etc/version.properties")"
 CurrentVersionNumber=$(getVersionNumber "$CurrentVersion")
@@ -136,10 +152,39 @@ case $CurrentVersion in
   *"-"* | *"."*"."*"."*) CurrentVersionNumber=$((CurrentVersionNumber-1));;
 esac
 
+## if current and new version are same, no need to do migration steps, it's security build
+if [ "$NewVersion" = "$CurrentVersion" ]; then
+  echo ""
+  echo "SUCCESS: openHAB version did not chnage( $CurrentVersion to $NewVersion)"
+  echo "This is security update"
+  echo ""
+  exit
+fi
+
+milestoneVersion="$(echo "${NewVersion}" | awk -F'.' '{print $4}')"
+## Choose bintray for releases, jenkins for snapshots and artifactory for milestones or release candidates.
+if test "${NewVersion#*-SNAPSHOT}" != "$NewVersion"; then
+  AddonsDownloadLocation="https://ci.openhab.org/job/openHAB-Distribution/lastSuccessfulBuild/artifact/distributions/openhab-addons/target/openhab-addons-$NewVersion.kar"
+  LegacyAddonsDownloadLocation="https://ci.openhab.org/job/openHAB-Distribution/lastSuccessfulBuild/artifact/distributions/openhab-addons-legacy/target/openhab-addons-legacy-$NewVersion.kar"
+elif [ -n "$milestoneVersion" ]; then
+  AddonsDownloadLocation="https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab-addons/$NewVersion/openhab-addons-$NewVersion.kar"
+  LegacyAddonsDownloadLocation="https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab-addons-legacy/$NewVersion/openhab-addons-legacy-$NewVersion.kar"
+else
+  AddonsDownloadLocation="https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab-addons%2F$NewVersion%2Fopenhab-addons-$NewVersion.kar"
+  LegacyAddonsDownloadLocation="https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab-addons-legacy%2F$NewVersion%2Fopenhab-addons-legacy-$NewVersion.kar"
+fi
+
 echo -e "Upgrading from version ${CurrentVersion} to ${NewVersion}"
 WorkingDir=${SNAP}
 
-# delete files which should not be migrated
+## Notify the user of important changes first
+scanVersioningList "MSG" "Important notes for version"
+
+## Perform version specific pre-update commands
+scanVersioningList "PRE" "Performing pre-update tasks for version"
+
+## Remove only the files that are to be replaced.
+# in snap case, delete files which should not be migrated
 while IFS= read -r fileName
 do
   fullPath="${SNAP_DATA}/userdata/etc/$fileName"
@@ -153,7 +198,8 @@ echo "Clearing cache..."
 rm -rf "${SNAP_DATA}/userdata/cache"
 rm -rf "${SNAP_DATA}/userdata/tmp"
 
-# copy new files WITHOUT replacing any existing files.
+## Unzip the downloaded folder into openHAB's directory WITHOUT replacing any existing files.
+# in snap world copy new files WITHOUT replacing any existing files.
 cp -n ${SNAP}/userdata ${SNAP_DATA}/
 cp -n ${SNAP}/conf ${SNAP_DATA}/
 # copy addons, ignore error if they do not exist
@@ -163,11 +209,32 @@ cp ${SNAP}/addons/openhab-addons-legacy-*.kar ${SNAP_DATA}/addons 2>/dev/null ||
 
 # copy over etc files
 cp -r "${SNAP}/userdata/etc" "${SNAP_DATA}/userdata/"
+
+## Perform version specific post-update commands
 scanVersioningList "POST" "Performing post-update tasks for version"
+
+## If there's an existing addons file, we need to replace it with the correct version.
+AddonsFile="${SNAP_DATA}/addons/openhab-addons-$CurrentVersion.kar"
+if [ -f "$AddonsFile" ] && [ -n "$AddonsDownloadLocation" ]; then
+  echo "Found an openHAB addons file, replacing with new version..."
+  rm -f "${AddonsFile:?}"
+  curl -Lf# "$AddonsDownloadLocation" -o "${SNAP_DATA}/addons/openhab-addons-${NewVersion}}.kar" || {
+      echo "Download of addons file failed, please find it on the openHAB website (www.openhab.org)" >&2
+  }
+fi
+
+## Do the same for the legacy addons file.
+LegacyAddonsFile="${SNAP_DATA}/addons/openhab-addons-legacy-$CurrentVersion.kar"
+if [ -f "$LegacyAddonsFile" ] && [ -n "$LegacyAddonsDownloadLocation" ]; then
+  echo "Found an openHAB legacy addons file, replacing with new version..."
+  rm -f "${LegacyAddonsFile:?}"
+  curl -Lf# "$LegacyAddonsDownloadLocation" -o "${SNAP_DATA}/addons/openhab-addons-legacy-${NewVersion}.kar" || {
+      echo "Download of legacy addons file failed, please find it on the openHAB website (www.openhab.org)" >&2
+  }
+fi
 
 # add here more custom migration steps
 
-# make sure there is config for influxdb
-if [ ! -e $SNAP_DATA/conf/influxdb.conf ]; then
-    cp $SNAP/conf/influxdb.conf $SNAP_DATA/conf/influxdb.conf
-fi
+echo ""
+echo "SUCCESS: openHAB updated from $CurrentVersion to $NewVersion"
+echo ""
