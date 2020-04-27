@@ -265,6 +265,7 @@ parts:
           - -man
           - -sample
           - -src.zip
+          - -openjfx-src.zip
           - -jre/lib/aarch32/client/libjvm.diz
           - -jre/lib/aarch64/server/libjvm.diz
         organize:
