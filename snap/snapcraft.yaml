@@ -32,6 +32,9 @@ hooks:
       plugs:
           - network
           - network-bind
+    post-refresh:
+      plugs:
+          - network
 
 apps:
     openhab:
