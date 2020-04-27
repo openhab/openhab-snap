@@ -312,3 +312,4 @@ build-packages:
     - asciidoc
     - xmlto
     - docbook-xsl
+    - unzip
