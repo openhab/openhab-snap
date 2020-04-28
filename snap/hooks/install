@@ -2,10 +2,22 @@
 
 set -x
 
-exec >> $SNAP_COMMON/hook.log 2>&1
+exec >> $SNAP_COMMON/install.log 2>&1
 echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
 # handle fresh istall
-[ ! -d $SNAP_DATA/userdata ] &&  cp -rf $SNAP/userdata $SNAP_DATA/
-[ ! -d $SNAP_DATA/conf ] && cp -rf $SNAP/conf $SNAP_DATA/
-[ ! -d $SNAP_DATA/addons ] && cp -r $SNAP/addons $SNAP_DATA/addons
+cp -rf $SNAP/userdata $SNAP_DATA/
+cp -rf $SNAP/conf $SNAP_DATA/
+cp -rf $SNAP/addons $SNAP_DATA/addons
+
+# fresh install no need to migrate config
+snapctl set conf-migrated=true
+
+# make sure there is config for influxdb
+if [ ! -e $SNAP_DATA/conf/influxdb.conf ]; then
+    cp $SNAP/conf/influxdb.conf $SNAP_DATA/conf/influxdb.conf
+fi
+
+# stop influx related services
+snapctl stop --disable ${SNAP_INSTANCE_NAME}.influxd
+snapctl stop --disable ${SNAP_INSTANCE_NAME}.influx-setup

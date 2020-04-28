@@ -5,8 +5,15 @@ set -x
 exec >> $SNAP_COMMON/hook.log 2>&1
 echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
 
-# read openhab config
-. $SNAP/bin/config
-# settings were altered by user, safest way to get them applied is to restart service
+# check if we need to run influxdb
+if [ "true" == "$(snapctl get influxdb.binding-openhab.enabled)" ]; then
+    snapctl start --enable ${SNAP_INSTANCE_NAME}.influxd
+    snapctl start --enable ${SNAP_INSTANCE_NAME}.influx-setup
+else
+    snapctl set influxdb.binding-openhab.configured=false
+    snapctl stop --disable ${SNAP_INSTANCE_NAME}.influxd
+    snapctl stop --disable ${SNAP_INSTANCE_NAME}.influx-setup
+fi
 
-# call snapctl restart for the service once this is available
+# settings were altered by user, safest way to get them applied is to restart service
+snapctl restart ${SNAP_INSTANCE_NAME}.openhab 2>&1 || true
