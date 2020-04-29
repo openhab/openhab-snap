@@ -32,6 +32,9 @@ hooks:
       plugs:
           - network
           - network-bind
+    post-refresh:
+      plugs:
+          - network
 
 apps:
     openhab:
@@ -158,15 +161,43 @@ apps:
 
 parts:
     openhab:
-        source: https://ci.openhab.org/job/openHAB-Distribution/lastSuccessfulBuild/artifact/distributions/openhab/target/*zip*/target.zip
+        # source only as trigger build whenever something changes in openHAB repo
+        source: https://github.com/openhab/openhab-distro.git
         plugin: nil
         stage:
           - -start*
           - -runtime/bin/*.bat
         organize:
           LICENSE: LICENSE_OPENHAB
+        override-pull: |
+            last_released_tag="$(snap info openhab | awk '$1 == "latest/beta:" { print $2 }')"
+            last_candidate_tag="$(snap info openhab | awk '$1 == "latest/candidate:" { print $2 }')"
+            wget --quiet -O latest_version https://bintray.com/openhab/mvn/openhab-distro/_latestVersion
+            latest_version="$(grep \'version\': latest_version | awk '{print $2}' | sed -e "s/'//g" -e 's/,//g')"
+            latest_milestone_version=$(curl --silent -q https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml | grep "<version>" | tail -1 | sed 's/.*>\(.*\)<.*/\1/g')
+            # first we check for milestone in candidate, then if we have latest release version in beta
+            if $(dpkg --compare-versions "${last_candidate_tag}" "lt" "${latest_milestone_version}"); then
+               echo "Building latest milestone version: ${latest_milestone_version}"
+               wget --quiet \
+                    -O openhab-milestone.tar.gz \
+                    https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/${latest_milestone_version}/openhab-${latest_milestone_version}.tar.gz
+            elif [ "${latest_version}" != "${last_released_tag}" ]; then
+               echo "Building latest release version: ${latest_version}"
+               wget --quiet \
+                    -O openhab-release.tar.gz \
+                    https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F${latest_version}%2Fopenhab-${latest_version}.tar.gz
+            else
+               echo "Building latest snapshot version"
+               wget --quiet \
+                    -O openhab.zip \
+                    https://ci.openhab.org/job/openHAB-Distribution/lastSuccessfulBuild/artifact/distributions/openhab/target/*zip*/target.zip
+               unzip openhab.zip
+               rm openhab.zip
+               mv target/openhab-*.tar.gz .
+               rm -rf target
+            fi
         override-build: |
-            tar xf target/openhab-*.tar.gz -C ${SNAPCRAFT_PART_INSTALL}
+            tar xf openhab-*.tar.gz -C ${SNAPCRAFT_PART_INSTALL}
             VERSION=$(grep 'openhab-distro' ${SNAPCRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $3}')
             BUILD_NO=$(grep 'build-no' ${SNAPCRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $4}' | cut -c 2-)
             [ -n "$(echo $VERSION | grep SNAPSHOT)" ] && VERSION="${VERSION}-bn${BUILD_NO}"
@@ -257,6 +288,7 @@ parts:
           - -man
           - -sample
           - -src.zip
+          - -openjfx-src.zip
           - -jre/lib/aarch32/client/libjvm.diz
           - -jre/lib/aarch64/server/libjvm.diz
         organize:
@@ -312,3 +344,4 @@ build-packages:
     - asciidoc
     - xmlto
     - docbook-xsl
+    - unzip
