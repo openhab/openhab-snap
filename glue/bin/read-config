@@ -41,7 +41,7 @@ else
   if [ "true" != "${influx_enabled}" ]; then
     snapctl unset influxdb.binding-openhab.enabled
     snapctl stop --disable ${SNAP_INSTANCE_NAME}.influxd
-    snapctl stop --disable ${SNAP_INSTANCE_NAME}.influxd-setup
+    snapctl stop --disable ${SNAP_INSTANCE_NAME}.influx-setup
   fi
 fi
 
