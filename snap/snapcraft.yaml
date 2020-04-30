@@ -17,6 +17,12 @@ grade: stable
 adopt-info: openhab
 base: core18
 
+architectures:
+    - build-on: armhf
+    - build-on: arm64
+    - build-on: amd64
+    - build-on: i386
+
 environment:
     JAVA_HOME:        ${SNAP}/jre
     PATH:             ${SNAP}/jre/bin:${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:${PATH}
