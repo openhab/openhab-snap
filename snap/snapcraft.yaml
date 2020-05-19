@@ -317,7 +317,7 @@ parts:
 
     influxdb:
         source: https://github.com/influxdata/influxdb.git
-        source-tag: v1.7.5
+        source-tag: v1.8.0
         build-snaps: ["go"]
         source-depth: 1
         plugin: python
