@@ -173,7 +173,7 @@ apps:
 parts:
     openhab:
         # source only as trigger build whenever something changes in openHAB repo
-        source: https://github.com/openhab/openhab-distro.git
+        source: https://github.com/openhab/openhab-addons.git
         plugin: nil
         stage:
           - -start*
