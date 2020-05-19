@@ -173,6 +173,8 @@ apps:
 parts:
     openhab:
         plugin: nil
+        # this source repository is used only as trigger for automated build
+        source: https://github.com/openhab/openhab-addons.git
         stage:
           - -start*
           - -runtime/bin/*.bat
