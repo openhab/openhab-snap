@@ -24,24 +24,30 @@ else
     export HOST="$(echo ${url} | sed 's/:.*//')"
 fi
 
-# if there is influxdb.cfg file created,
-# automatically enable builtin influxdb integration
-if [ -f ${SNAP_DATA}/conf/services/influxdb.cfg ]; then
-  # if integration is disabled, do not auto enable it
-  influx_enabled=$(snapctl get influxdb.binding-openhab.enabled)
-  if [ "false" != "${influx_enabled}" ] || [ "true" != "${influx_enabled}" ]; then
-    # automatically disable builtin influxdb
-    snapctl set influxdb.binding-openhab.enabled="true"
-    snapctl start --enable ${SNAP_INSTANCE_NAME}.influxd
-    snapctl start --enable ${SNAP_INSTANCE_NAME}.influx-setup
-  fi
-else
-  # if persistent plugin was removed, no need to run influxdb anymore
-  influx_enabled=$(snapctl get influxdb.binding-openhab.enabled)
-  if [ "true" != "${influx_enabled}" ]; then
-    snapctl unset influxdb.binding-openhab.enabled
-    snapctl stop --disable ${SNAP_INSTANCE_NAME}.influxd
-    snapctl stop --disable ${SNAP_INSTANCE_NAME}.influx-setup
+# if openHAB is already running, then we are called as part of different action
+# do not check for influxdb service state
+if [ ! -f ${SNAP_DATA}/userdata/tmp/instances/instance.properties ] \
+   || [ "0" = "$( grep pid ${SNAP_DATA}/userdata/tmp/instances/instance.properties | awk '{print $3}')" ]; then
+  echo "openHAB is not running, check if influxdb should be started/stopped"
+  # if there is influxdb.cfg file created,
+  # automatically enable builtin influxdb integration
+  if [ -f ${SNAP_DATA}/conf/services/influxdb.cfg ]; then
+    # if integration is disabled, do not auto enable it
+    influx_enabled=$(snapctl get influxdb.binding-openhab.enabled)
+    if [ "false" != "${influx_enabled}" ] || [ "true" != "${influx_enabled}" ]; then
+      # automatically disable builtin influxdb
+      snapctl set influxdb.binding-openhab.enabled="true"
+      snapctl start --enable ${SNAP_INSTANCE_NAME}.influxd
+      snapctl start --enable ${SNAP_INSTANCE_NAME}.influx-setup
+    fi
+  else
+    # if persistent plugin was removed, no need to run influxdb anymore
+    influx_enabled=$(snapctl get influxdb.binding-openhab.enabled)
+    if [ "true" != "${influx_enabled}" ]; then
+      snapctl unset influxdb.binding-openhab.enabled
+      snapctl stop --disable ${SNAP_INSTANCE_NAME}.influxd
+      snapctl stop --disable ${SNAP_INSTANCE_NAME}.influx-setup
+    fi
   fi
 fi
 
