@@ -181,7 +181,13 @@ parts:
         organize:
           LICENSE: LICENSE_OPENHAB
         override-pull: |
-            last_released_tag="$(snap info openhab | awk '$1 == "latest/beta:" { print $2 }')"
+            # if beta is closed, check edge
+            for ch in "beta" "edge"; do
+                last_released_tag="$(snap info ${SNAPCRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
+                if [ -n "${last_released_tag}" ] && [ ! "${last_released_tag}" = "^" ]; then
+                    break
+                fi
+            done
             # if candidate is close, go to beta -> edge
             for ch in "candidate" "beta" "edge"; do
                 last_candidate_tag="$(snap info ${SNAPCRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
