@@ -299,17 +299,15 @@ parts:
           echo "tar_link=[${tar_link}]"
           wget -O zulu.tar.gz ${tar_link}
           tar -C ${SNAPCRAFT_PART_INSTALL} -xf zulu.tar.gz --strip 1
-        stage:
-          - -bin
-          - -demo
-          - -include
-          - -lib
-          - -man
-          - -sample
-          - -src.zip
-          - -openjfx-src.zip
-          - -jre/lib/aarch32/client/libjvm.diz
-          - -jre/lib/aarch64/server/libjvm.diz
+          rm -rf ${SNAPCRAFT_PART_INSTALL}/demo \
+                 ${SNAPCRAFT_PART_INSTALL}/include \
+                 ${SNAPCRAFT_PART_INSTALL}/jmods \
+                 ${SNAPCRAFT_PART_INSTALL}/legal \
+                 ${SNAPCRAFT_PART_INSTALL}/lib/ct.sym \
+                 ${SNAPCRAFT_PART_INSTALL}/lib/libattach.so \
+                 ${SNAPCRAFT_PART_INSTALL}/lib/libsaproc.so \
+                 ${SNAPCRAFT_PART_INSTALL}/lib/src.zip \
+                 ${SNAPCRAFT_PART_INSTALL}/man
         organize:
           LICENSE: LICENSE_ZULU
           release: release_zulu
