@@ -182,7 +182,13 @@ parts:
           LICENSE: LICENSE_OPENHAB
         override-pull: |
             last_released_tag="$(snap info openhab | awk '$1 == "latest/beta:" { print $2 }')"
-            last_candidate_tag="$(snap info openhab | awk '$1 == "latest/candidate:" { print $2 }')"
+            # if candidate is close, go to beta -> edge
+            for ch in "candidate" "beta" "edge"; do
+                last_candidate_tag="$(snap info ${SNAPCRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
+                if [ -n "${last_candidate_tag}" ] && [ ! "${last_candidate_tag}" = "^" ]; then
+                    break
+                fi
+            done
             wget --quiet -O latest_version https://bintray.com/openhab/mvn/openhab-distro/_latestVersion
             latest_version="$(grep \'version\': latest_version | awk '{print $2}' | sed -e "s/'//g" -e 's/,//g')"
             latest_milestone_version=$(curl --silent -q https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml | grep "<version>" | tail -1 | sed 's/.*>\(.*\)<.*/\1/g')
