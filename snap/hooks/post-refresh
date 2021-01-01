@@ -78,6 +78,11 @@ runCommand() {
     ;;
     'MOVE')
       echo "  Moving:   From $param1 to $param2"
+      fileDir=$(dirname "$param2")
+      # Create directory
+      if [ ! -d fileDir ]; then
+        mkdir -p "$fileDir"
+      fi
       mv "$param1" "$param2"
     ;;
     'REPLACE')
@@ -220,16 +225,6 @@ if [ -f "$AddonsFile" ] && [ -n "$AddonsDownloadLocation" ]; then
   rm -f "${AddonsFile:?}"
   curl -Lf# "$AddonsDownloadLocation" -o "${SNAP_DATA}/addons/openhab-addons-${NewVersion}}.kar" || {
       echo "Download of addons file failed, please find it on the openHAB website (www.openhab.org)" >&2
-  }
-fi
-
-## Do the same for the legacy addons file.
-LegacyAddonsFile="${SNAP_DATA}/addons/openhab-addons-legacy-$CurrentVersion.kar"
-if [ -f "$LegacyAddonsFile" ] && [ -n "$LegacyAddonsDownloadLocation" ]; then
-  echo "Found an openHAB legacy addons file, replacing with new version..."
-  rm -f "${LegacyAddonsFile:?}"
-  curl -Lf# "$LegacyAddonsDownloadLocation" -o "${SNAP_DATA}/addons/openhab-addons-legacy-${NewVersion}.kar" || {
-      echo "Download of legacy addons file failed, please find it on the openHAB website (www.openhab.org)" >&2
   }
 fi
 
