@@ -195,19 +195,27 @@ parts:
                     break
                 fi
             done
-            wget --quiet -O latest_version https://bintray.com/openhab/mvn/openhab-distro/_latestVersion
-            latest_version="$(grep \'version\': latest_version | awk '{print $2}' | sed -e "s/'//g" -e 's/,//g')"
-            latest_milestone_version=$(curl --silent -q https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml | grep "<version>" | tail -1 | sed 's/.*>\(.*\)<.*/\1/g')
+            wget --quiet -O latest_version https://bintray.com/openhab/mvn/openhab-core/_latestVersion
+            latest_version="$(grep \'version\': latest_version | \
+                              awk '{print $2}' | \
+                              sed -e "s/'//g" -e 's/,//g')"
+            milestone_version="$( \
+                  curl --silent -q \
+                  https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml \
+                  | grep "<version>" \
+                  | tail -1 \
+                  | sed 's/.*>\(.*\)<.*/\1/g')"
+
             # first we check for milestone in candidate, then if we have latest release version in beta
             echo "last_released_tag=${last_released_tag}, last_candidate_tag=${last_candidate_tag}, " \
-                 "latest_version=${latest_version}, latest_milestone_version=${latest_milestone_version}"
+                 "latest_version=${latest_version}, milestone_version=${milestone_version}"
             # compare main version of milestore release to candidate version e.g. 3.0.0.RC2 -> 3.0.0,
             # since 3.0.0.RC2 is otherwise consideted as newer then final 3.0.0, which would be wrong
-            if $(dpkg --compare-versions "${last_candidate_tag}" "lt" "$(echo ${latest_milestone_version}| cut -c -5)"); then
-               echo "Building latest milestone version: ${latest_milestone_version}"
+            if $(dpkg --compare-versions "${last_candidate_tag}" "lt" "$(echo ${milestone_version}| cut -c -5)"); then
+               echo "Building latest milestone version: ${milestone_version}"
                wget --quiet \
                     -O openhab-milestone.tar.gz \
-                    https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/${latest_milestone_version}/openhab-${latest_milestone_version}.tar.gz
+                    https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/${milestone_version}/openhab-${milestone_version}.tar.gz
             elif [ "${latest_version}" != "${last_released_tag}" ]; then
                echo "Building latest release version: ${latest_version}"
                wget --quiet \
