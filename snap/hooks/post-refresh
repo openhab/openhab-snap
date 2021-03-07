@@ -1,12 +1,9 @@
 #!/bin/bash
 
-set -x
-
 ## Clean log files first
 rm ${SNAP_DATA}/userdata/logs/*
-
-exec > "${SNAP_DATA}/userdata/logs/update.log" 2>&1
-echo "$(date '+%Y-%m-%d %H:%M:%S') $0: Entering hook"
+[ -e ${SNAP_COMMON}/hook.log ] && rm ${SNAP_COMMON}/hook.log
+logger "$(date '+%Y-%m-%d %H:%M:%S'): Entering $(basename $0) hook"
 
 # migrate snap configuration to new schema
 #    old key                new key
@@ -59,25 +56,25 @@ runCommand() {
     case $command in
     'DEFAULT')
       # Just rename the file, the update process adds back the new version
-      echo "  Adding '.bak' to $param1"
+      logger "  Adding '.bak' to $param1"
       mv "$param1" "$param1.bak"
     ;;
     'DELETE')
       # We should be strict and specific here, i.e only delete one file.
       if [ -f "$param1" ]; then
-        echo "  Deleting File: $param1"
+        logger "  Deleting File: $param1"
         rm -f "$param1"
       fi
     ;;
     'DELETEDIR')
       # We should be strict and specific here, i.e only delete one directory.
       if [ -d "$param1" ]; then
-        echo "  Deleting Directory: $param1"
+        logger "  Deleting Directory: $param1"
         rm -rf "$param1"
       fi
     ;;
     'MOVE')
-      echo "  Moving:   From $param1 to $param2"
+      logger "  Moving:   From $param1 to $param2"
       fileDir=$(dirname "$param2")
       # Create directory
       if [ ! -d fileDir ]; then
@@ -88,7 +85,7 @@ runCommand() {
     'REPLACE')
       # Avoid error if file does not exist
       if [ -f "$param3" ]; then
-        echo "  Replacing: String $param1 to $param2 in file $param3"
+        logger "  Replacing: String $param1 to $param2 in file $param3"
         sed -i'.bak' -e "s:$param1:$param2:g" "$param3"
       fi
     ;;
@@ -127,8 +124,7 @@ scanVersioningList() {
         LineVersionNumber=$(getVersionNumber "$LineVersion")
         if [ "$CurrentVersionNumber" -lt "$LineVersionNumber" ]; then
           InNewVersion=true
-          echo ""
-          echo "$VersionMessage $LineVersion:"
+          logger "$VersionMessage $LineVersion:"
         else
           InNewVersion=false
         fi
@@ -159,10 +155,7 @@ esac
 
 ## if current and new version are same, no need to do migration steps, it's security build
 if [ "$NewVersion" = "$CurrentVersion" ]; then
-  echo ""
-  echo "SUCCESS: openHAB version did not chnage( $CurrentVersion to $NewVersion)"
-  echo "This is security update"
-  echo ""
+  logger "SUCCESS: openHAB version did not chnage( $CurrentVersion to $NewVersion), This is security update"
   exit
 fi
 
@@ -179,7 +172,7 @@ else
   LegacyAddonsDownloadLocation="https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab-addons-legacy%2F$NewVersion%2Fopenhab-addons-legacy-$NewVersion.kar"
 fi
 
-echo -e "Upgrading from version ${CurrentVersion} to ${NewVersion}"
+logger "Upgrading from version ${CurrentVersion} to ${NewVersion}"
 WorkingDir=${SNAP}
 
 ## Notify the user of important changes first
@@ -199,7 +192,7 @@ do
 done < "${SNAP}/runtime/bin/userdata_sysfiles.lst"
 
 ## Clearing the cache and tmp folders is necessary for upgrade.
-echo "Clearing cache..."
+logger "Clearing cache..."
 rm -rf "${SNAP_DATA}/userdata/cache"
 rm -rf "${SNAP_DATA}/userdata/tmp"
 
@@ -221,15 +214,13 @@ scanVersioningList "POST" "Performing post-update tasks for version"
 ## If there's an existing addons file, we need to replace it with the correct version.
 AddonsFile="${SNAP_DATA}/addons/openhab-addons-$CurrentVersion.kar"
 if [ -f "$AddonsFile" ] && [ -n "$AddonsDownloadLocation" ]; then
-  echo "Found an openHAB addons file, replacing with new version..."
+  logger "Found an openHAB addons file, replacing with new version..."
   rm -f "${AddonsFile:?}"
   curl -Lf# "$AddonsDownloadLocation" -o "${SNAP_DATA}/addons/openhab-addons-${NewVersion}}.kar" || {
-      echo "Download of addons file failed, please find it on the openHAB website (www.openhab.org)" >&2
+      logger "Download of addons file failed, please find it on the openHAB website (www.openhab.org)" >&2
   }
 fi
 
 # add here more custom migration steps
 
-echo ""
-echo "SUCCESS: openHAB updated from $CurrentVersion to $NewVersion"
-echo ""
+logger "SUCCESS: openHAB updated from $CurrentVersion to $NewVersion"
