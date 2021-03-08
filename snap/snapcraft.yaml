@@ -24,8 +24,8 @@ architectures:
     - build-on: i386
 
 environment:
-    JAVA_HOME:        ${SNAP}/jre
-    PATH:             ${SNAP}/jre/bin:${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:${PATH}
+    JAVA_HOME:        ${SNAP}
+    PATH:             ${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:${PATH}
     LD_LIBRARY_PATH:  ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${SNAPCRAFT_ARCH_TRIPLET}:${SNAP}/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
     OPENHAB_CONF:     ${SNAP_DATA}/conf
     OPENHAB_RUNTIME:  ${SNAP}/runtime
@@ -181,17 +181,41 @@ parts:
         organize:
           LICENSE: LICENSE_OPENHAB
         override-pull: |
-            last_released_tag="$(snap info openhab | awk '$1 == "latest/beta:" { print $2 }')"
-            last_candidate_tag="$(snap info openhab | awk '$1 == "latest/candidate:" { print $2 }')"
-            wget --quiet -O latest_version https://bintray.com/openhab/mvn/openhab-distro/_latestVersion
-            latest_version="$(grep \'version\': latest_version | awk '{print $2}' | sed -e "s/'//g" -e 's/,//g')"
-            latest_milestone_version=$(curl --silent -q https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml | grep "<version>" | tail -1 | sed 's/.*>\(.*\)<.*/\1/g')
+            # if beta is closed, check edge
+            for ch in "beta" "edge"; do
+                last_released_tag="$(snap info ${SNAPCRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
+                if [ -n "${last_released_tag}" ] && [ ! "${last_released_tag}" = "^" ]; then
+                    break
+                fi
+            done
+            # if candidate is close, go to beta -> edge
+            for ch in "candidate" "beta" "edge"; do
+                last_candidate_tag="$(snap info ${SNAPCRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
+                if [ -n "${last_candidate_tag}" ] && [ ! "${last_candidate_tag}" = "^" ]; then
+                    break
+                fi
+            done
+            wget --quiet -O latest_version https://bintray.com/openhab/mvn/openhab-core/_latestVersion
+            latest_version="$(grep \'version\': latest_version | \
+                              awk '{print $2}' | \
+                              sed -e "s/'//g" -e 's/,//g')"
+            milestone_version="$( \
+                  curl --silent -q \
+                  https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml \
+                  | grep "<version>" \
+                  | tail -1 \
+                  | sed 's/.*>\(.*\)<.*/\1/g')"
+
             # first we check for milestone in candidate, then if we have latest release version in beta
-            if $(dpkg --compare-versions "${last_candidate_tag}" "lt" "${latest_milestone_version}"); then
-               echo "Building latest milestone version: ${latest_milestone_version}"
+            echo "last_released_tag=${last_released_tag}, last_candidate_tag=${last_candidate_tag}, " \
+                 "latest_version=${latest_version}, milestone_version=${milestone_version}"
+            # compare main version of milestore release to candidate version e.g. 3.0.0.RC2 -> 3.0.0,
+            # since 3.0.0.RC2 is otherwise consideted as newer then final 3.0.0, which would be wrong
+            if $(dpkg --compare-versions "${last_candidate_tag}" "lt" "$(echo ${milestone_version}| cut -c -5)"); then
+               echo "Building latest milestone version: ${milestone_version}"
                wget --quiet \
                     -O openhab-milestone.tar.gz \
-                    https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/${latest_milestone_version}/openhab-${latest_milestone_version}.tar.gz
+                    https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/${milestone_version}/openhab-${milestone_version}.tar.gz
             elif [ "${latest_version}" != "${last_released_tag}" ]; then
                echo "Building latest release version: ${latest_version}"
                wget --quiet \
@@ -201,7 +225,7 @@ parts:
                echo "Building latest snapshot version"
                wget --quiet \
                     -O openhab.zip \
-                    https://ci.openhab.org/job/openHAB-Distribution/lastSuccessfulBuild/artifact/distributions/openhab/target/*zip*/target.zip
+                    https://ci.openhab.org/job/openHAB3-Distribution/lastSuccessfulBuild/artifact/distributions/openhab/target/*zip*/target.zip
                unzip openhab.zip
                rm openhab.zip
                mv target/openhab-*.tar.gz .
@@ -287,29 +311,27 @@ parts:
         override-pull: |
           echo "SNAPCRAFT_ARCH_TRIPLET=${SNAPCRAFT_ARCH_TRIPLET}"
           if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=8&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jdk" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jdk" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=8&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "x86_64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=8&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
           else
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=8&ext=tar.gz&os=linux&arch=x86&hw_bitness=32&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=x86&hw_bitness=32&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
           fi
           tar_link=$(jq -r '.url' ${SNAPCRAFT_PART_INSTALL}/zulu_version.json)
           echo "tar_link=[${tar_link}]"
           wget -O zulu.tar.gz ${tar_link}
           tar -C ${SNAPCRAFT_PART_INSTALL} -xf zulu.tar.gz --strip 1
-        stage:
-          - -bin
-          - -demo
-          - -include
-          - -lib
-          - -man
-          - -sample
-          - -src.zip
-          - -openjfx-src.zip
-          - -jre/lib/aarch32/client/libjvm.diz
-          - -jre/lib/aarch64/server/libjvm.diz
+          rm -rf ${SNAPCRAFT_PART_INSTALL}/demo \
+                 ${SNAPCRAFT_PART_INSTALL}/include \
+                 ${SNAPCRAFT_PART_INSTALL}/jmods \
+                 ${SNAPCRAFT_PART_INSTALL}/legal \
+                 ${SNAPCRAFT_PART_INSTALL}/lib/ct.sym \
+                 ${SNAPCRAFT_PART_INSTALL}/lib/libattach.so \
+                 ${SNAPCRAFT_PART_INSTALL}/lib/libsaproc.so \
+                 ${SNAPCRAFT_PART_INSTALL}/lib/src.zip \
+                 ${SNAPCRAFT_PART_INSTALL}/man
         organize:
           LICENSE: LICENSE_ZULU
           release: release_zulu
