@@ -195,17 +195,12 @@ parts:
                     break
                 fi
             done
-            wget --quiet -O latest_version https://bintray.com/openhab/mvn/openhab-core/_latestVersion
-            latest_version="$(grep \'version\': latest_version | \
-                              awk '{print $2}' | \
-                              sed -e "s/'//g" -e 's/,//g')"
-            milestone_version="$( \
-                  curl --silent -q \
-                  https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml \
-                  | grep "<version>" \
-                  | tail -1 \
-                  | sed 's/.*>\(.*\)<.*/\1/g')"
-
+            wget -O release-metadata.xml \
+                 https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/maven-metadata.xml
+            wget -O milestone-metadata.xml \
+                 https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml
+            milestone_version="$(xmllint --xpath "string(//latest)" milestone-metadata.xml)"
+            latest_version="$(xmllint --xpath "string(//latest)" release-metadata.xml)"
             # first we check for milestone in candidate, then if we have latest release version in beta
             echo "last_released_tag=${last_released_tag}, last_candidate_tag=${last_candidate_tag}, " \
                  "latest_version=${latest_version}, milestone_version=${milestone_version}"
@@ -220,7 +215,7 @@ parts:
                echo "Building latest release version: ${latest_version}"
                wget --quiet \
                     -O openhab-release.tar.gz \
-                    https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F${latest_version}%2Fopenhab-${latest_version}.tar.gz
+                    https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/${latest_version}/openhab-${latest_version}.tar.gz
             else
                echo "Building latest snapshot version"
                wget --quiet \
@@ -386,3 +381,4 @@ build-packages:
     - xmlto
     - docbook-xsl
     - unzip
+    - libxml2-utils
