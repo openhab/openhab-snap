@@ -206,7 +206,8 @@ parts:
                  "latest_version=${latest_version}, milestone_version=${milestone_version}"
             # compare main version of milestore release to candidate version e.g. 3.0.0.RC2 -> 3.0.0,
             # since 3.0.0.RC2 is otherwise consideted as newer then final 3.0.0, which would be wrong
-            if $(dpkg --compare-versions "${last_candidate_tag}" "lt" "$(echo ${milestone_version}| cut -c -5)"); then
+            if $(dpkg --compare-versions "${latest_version}" "lt" "$(echo ${milestone_version} | cut -c -5)") && \
+               [ "${last_candidate_tag}" != "${milestone_version}" ]; then
                echo "Building latest milestone version: ${milestone_version}"
                wget --quiet \
                     -O openhab-milestone.tar.gz \
