@@ -263,15 +263,16 @@ parts:
         override-pull: |
           echo "SNAPCRAFT_ARCH_TRIPLET=${SNAPCRAFT_ARCH_TRIPLET}"
           if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jdk" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jdk" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "x86_64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           fi
-          tar_link=$(jq -r '.url' ${SNAPCRAFT_PART_INSTALL}/zulu_version.json)
+          tar_link=$(jq -r '.url' ${SNAPCRAFT_PART_SRC}/zulu_version.json)
           echo "tar_link=[${tar_link}]"
           wget -O zulu.tar.gz ${tar_link}
+        override-build: |
           tar -C ${SNAPCRAFT_PART_INSTALL} -xf zulu.tar.gz --strip 1
           rm -rf ${SNAPCRAFT_PART_INSTALL}/demo \
                  ${SNAPCRAFT_PART_INSTALL}/include \
@@ -282,6 +283,7 @@ parts:
                  ${SNAPCRAFT_PART_INSTALL}/lib/libsaproc.so \
                  ${SNAPCRAFT_PART_INSTALL}/lib/src.zip \
                  ${SNAPCRAFT_PART_INSTALL}/man
+          cp ${SNAPCRAFT_PART_BUILD}/zulu_version.json ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
         organize:
           LICENSE: LICENSE_ZULU
           release: release_zulu
