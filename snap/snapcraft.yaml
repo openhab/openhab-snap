@@ -320,8 +320,6 @@ build-packages:
     - curl
     - software-properties-common
     - wget
-    - git
-    - mercurial
     - make
     - ruby
     - ruby-dev
@@ -330,8 +328,9 @@ build-packages:
     - build-essential
     - rpm
     - zip
-    - python
-    - python-boto
+    - python3
+    - python3-boto
+    - python-is-python3
     - asciidoc
     - xmlto
     - docbook-xsl
