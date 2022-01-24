@@ -15,13 +15,12 @@ description: |
 confinement: strict
 grade: stable
 adopt-info: openhab
-base: core18
+base: core20
 
 architectures:
     - build-on: armhf
     - build-on: arm64
     - build-on: amd64
-    - build-on: i386
 
 environment:
     JAVA_HOME:        ${SNAP}
@@ -244,62 +243,19 @@ parts:
     dependencies:
         plugin: nil
         stage-packages:
-            - to armhf:
-                - arping:armhf
-                - libxi6:armhf
-                - libxrender1:armhf
-                - libxtst6:armhf
-                - libxcb1:armhf
-                - libxext6:armhf
-                - libxdmcp6:armhf
-                - libxau6:armhf
-                - libx11-6:armhf
-                - zip:armhf
-                - unzip:armhf
-                - jq:armhf
-                - libasound2:armhf
-            - to arm64:
-                - arping:arm64
-                - libxi6:arm64
-                - libxrender1:arm64
-                - libxtst6:arm64
-                - libxcb1:arm64
-                - libxext6:arm64
-                - libxdmcp6:arm64
-                - libxau6:arm64
-                - libx11-6:arm64
-                - zip:arm64
-                - unzip:arm64
-                - jq:arm64
-                - libasound2:arm64
-            - to i386:
-                - arping:i386
-                - libxi6:i386
-                - libxrender1:i386
-                - libxtst6:i386
-                - libxcb1:i386
-                - libxext6:i386
-                - libxdmcp6:i386
-                - libxau6:i386
-                - libx11-6:i386
-                - zip:i386
-                - unzip:i386
-                - jq:i386
-                - libasound2:i386
-            - to amd64:
-                - arping:amd64
-                - libxi6:amd64
-                - libxrender1:amd64
-                - libxtst6:amd64
-                - libxcb1:amd64
-                - libxext6:amd64
-                - libxdmcp6:amd64
-                - libxau6:amd64
-                - libx11-6:amd64
-                - zip:amd64
-                - unzip:amd64
-                - jq:amd64
-                - libasound2:amd64
+            - arping
+            - libxi6
+            - libxrender1
+            - libxtst6
+            - libxcb1
+            - libxext6
+            - libxdmcp6
+            - libxau6
+            - libx11-6
+            - zip
+            - unzip
+            - jq
+            - libasound2
 
     # java run time
     jre:
@@ -307,17 +263,16 @@ parts:
         override-pull: |
           echo "SNAPCRAFT_ARCH_TRIPLET=${SNAPCRAFT_ARCH_TRIPLET}"
           if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jdk" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jdk" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "x86_64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
-          else
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=x86&hw_bitness=32&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           fi
-          tar_link=$(jq -r '.url' ${SNAPCRAFT_PART_INSTALL}/zulu_version.json)
+          tar_link=$(jq -r '.url' ${SNAPCRAFT_PART_SRC}/zulu_version.json)
           echo "tar_link=[${tar_link}]"
           wget -O zulu.tar.gz ${tar_link}
+        override-build: |
           tar -C ${SNAPCRAFT_PART_INSTALL} -xf zulu.tar.gz --strip 1
           rm -rf ${SNAPCRAFT_PART_INSTALL}/demo \
                  ${SNAPCRAFT_PART_INSTALL}/include \
@@ -328,6 +283,7 @@ parts:
                  ${SNAPCRAFT_PART_INSTALL}/lib/libsaproc.so \
                  ${SNAPCRAFT_PART_INSTALL}/lib/src.zip \
                  ${SNAPCRAFT_PART_INSTALL}/man
+          cp ${SNAPCRAFT_PART_BUILD}/zulu_version.json ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
         organize:
           LICENSE: LICENSE_ZULU
           release: release_zulu
@@ -366,8 +322,6 @@ build-packages:
     - curl
     - software-properties-common
     - wget
-    - git
-    - mercurial
     - make
     - ruby
     - ruby-dev
@@ -376,8 +330,9 @@ build-packages:
     - build-essential
     - rpm
     - zip
-    - python
-    - python-boto
+    - python3
+    - python3-boto
+    - python-is-python3
     - asciidoc
     - xmlto
     - docbook-xsl
