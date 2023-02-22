@@ -220,7 +220,7 @@ parts:
                echo "Building latest snapshot version"
                wget --quiet \
                     -O openhab.zip \
-                    https://ci.openhab.org/job/openHAB3-Distribution/lastSuccessfulBuild/artifact/distributions/openhab/target/*zip*/target.zip
+                    https://ci.openhab.org/job/openHAB-Distribution/lastSuccessfulBuild/artifact/distributions/openhab/target/*zip*/target.zip
                unzip openhab.zip
                rm openhab.zip
                mv target/openhab-*.tar.gz .
