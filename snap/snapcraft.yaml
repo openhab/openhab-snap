@@ -244,18 +244,12 @@ parts:
         plugin: nil
         stage-packages:
             - arping
-            - libxi6
-            - libxrender1
-            - libxtst6
-            - libxcb1
-            - libxext6
-            - libxdmcp6
-            - libxau6
-            - libx11-6
             - zip
             - unzip
             - jq
-            - libasound2
+            - libcairo-gobject2
+            - libcairo2
+            - libndp0
 
     # java run time
     jre:
@@ -263,11 +257,11 @@ parts:
         override-pull: |
           echo "SNAPCRAFT_ARCH_TRIPLET=${SNAPCRAFT_ARCH_TRIPLET}"
           if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jdk" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_SRC}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=17&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jre" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jre" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "x86_64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=11&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jdk" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jre" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           fi
           tar_link=$(jq -r '.url' ${SNAPCRAFT_PART_SRC}/zulu_version.json)
           echo "tar_link=[${tar_link}]"
@@ -287,6 +281,19 @@ parts:
         organize:
           LICENSE: LICENSE_ZULU
           release: release_zulu
+        stage-packages:
+            - java-common
+            - libxi6
+            - libxrender1
+            - libxtst6
+            - libxcb1
+            - libxext6
+            - libxdmcp6
+            - libxau6
+            - libx11-6
+            - libasound2
+            - libfontconfig1
+            - zlib1g
 
     # glue
     glue:
