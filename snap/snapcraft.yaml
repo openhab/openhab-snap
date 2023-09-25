@@ -256,18 +256,27 @@ parts:
         plugin: nil
         override-pull: |
           echo "SNAPCRAFT_ARCH_TRIPLET=${SNAPCRAFT_ARCH_TRIPLET}"
+          extension="deb"
           if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
               curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=17&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jre" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_SRC}/zulu_version.json
+              extension="tar.gz"
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=tar.gz&os=linux&arch=arm&hw_bitness=64&bundle_type=jre" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=arm&hw_bitness=64&bundle_type=jre" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "x86_64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=tar.gz&os=linux&arch=x86&hw_bitness=64&bundle_type=jre" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=x86&hw_bitness=64&bundle_type=jre" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
           fi
-          tar_link=$(jq -r '.url' ${SNAPCRAFT_PART_SRC}/zulu_version.json)
-          echo "tar_link=[${tar_link}]"
-          wget -O zulu.tar.gz ${tar_link}
+          url_link=$(jq -r '.url' ${SNAPCRAFT_PART_SRC}/zulu_version.json)
+          echo "url_link=[${url_link}]"
+          wget -O zulu.${extension} ${url_link}
         override-build: |
-          tar -C ${SNAPCRAFT_PART_INSTALL} -xf zulu.tar.gz --strip 1
+          # we use deb on amd64 and arm64
+          if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
+            tar -C ${SNAPCRAFT_PART_INSTALL} -xf ${SNAPCRAFT_PART_SRC}/zulu.tar.gz --strip 1
+          else
+            dpkg -x ${SNAPCRAFT_PART_SRC}/zulu.deb ${SNAPCRAFT_PART_INSTALL}
+            cp -rl ${SNAPCRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${SNAPCRAFT_TARGET_ARCH}/* ${SNAPCRAFT_PART_INSTALL}
+            rm -rf ${SNAPCRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${SNAPCRAFT_TARGET_ARCH}
+          fi
           rm -rf ${SNAPCRAFT_PART_INSTALL}/demo \
                  ${SNAPCRAFT_PART_INSTALL}/include \
                  ${SNAPCRAFT_PART_INSTALL}/jmods \
