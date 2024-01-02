@@ -15,7 +15,7 @@ description: |
 confinement: strict
 grade: stable
 adopt-info: openhab
-base: core20
+base: core22
 
 architectures:
     - build-on: armhf
@@ -25,7 +25,7 @@ architectures:
 environment:
     JAVA_HOME:        ${SNAP}
     PATH:             ${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:${PATH}
-    LD_LIBRARY_PATH:  ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${SNAPCRAFT_ARCH_TRIPLET}:${SNAP}/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
+    LD_LIBRARY_PATH:  ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}
     OPENHAB_CONF:     ${SNAP_DATA}/conf
     OPENHAB_RUNTIME:  ${SNAP}/runtime
     OPENHAB_USERDATA: ${SNAP_DATA}/userdata
@@ -43,7 +43,6 @@ hooks:
 
 apps:
     openhab:
-        adapter: none
         command-chain:
             - bin/read-config
         command: runtime/bin/karaf server
@@ -62,7 +61,6 @@ apps:
             - i2c
 
     start:
-        adapter: none
         command-chain:
             - bin/read-config
         command: runtime/bin/karaf
@@ -79,7 +77,6 @@ apps:
             - i2c
 
     karaf:
-        adapter: none
         command-chain:
             - bin/read-config
         command: runtime/bin/karaf
@@ -96,7 +93,6 @@ apps:
             - i2c
 
     status:
-        adapter: none
         command-chain:
             - bin/read-config
         command: runtime/bin/status
@@ -104,7 +100,6 @@ apps:
             - network
 
     stop:
-        adapter: none
         command-chain:
             - bin/read-config
         command: runtime/bin/stop
@@ -112,7 +107,6 @@ apps:
             - network
 
     client:
-        adapter: none
         command-chain:
             - bin/read-config
         command: runtime/bin/client
@@ -120,7 +114,6 @@ apps:
             - network
 
     backup:
-        adapter: none
         command-chain:
             - bin/read-config
         command: runtime/bin/backup
@@ -128,7 +121,6 @@ apps:
             - home
 
     restore:
-        adapter: none
         command-chain:
             - bin/read-config
         command: runtime/bin/restore
@@ -137,10 +129,8 @@ apps:
 
     help:
         command: bin/openhab-help
-        adapter: none
 
     influxd:
-        adapter: full
         command-chain:
             - bin/read-config
         command: bin/influxd
@@ -153,7 +143,6 @@ apps:
             INFLUXDB_CONFIG_PATH: $SNAP_DATA/conf/influxdb.conf
 
     influx-setup:
-        adapter: full
         command-chain:
             - bin/read-config
         command: bin/influx-setup
@@ -162,7 +151,6 @@ apps:
             - network
 
     influx:
-        adapter: full
         command-chain:
             - bin/read-config
         command: bin/influx-run-client
@@ -182,14 +170,14 @@ parts:
         override-pull: |
             # if beta is closed, check edge
             for ch in "beta" "edge"; do
-                last_released_tag="$(snap info ${SNAPCRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
+                last_released_tag="$(snap info ${CRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
                 if [ -n "${last_released_tag}" ] && [ ! "${last_released_tag}" = "^" ]; then
                     break
                 fi
             done
             # if candidate is close, go to beta -> edge
             for ch in "candidate" "beta" "edge"; do
-                last_candidate_tag="$(snap info ${SNAPCRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
+                last_candidate_tag="$(snap info ${CRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
                 if [ -n "${last_candidate_tag}" ] && [ ! "${last_candidate_tag}" = "^" ]; then
                     break
                 fi
@@ -227,17 +215,17 @@ parts:
                rm -rf target
             fi
         override-build: |
-            tar xf openhab-*.tar.gz -C ${SNAPCRAFT_PART_INSTALL}
-            VERSION=$(grep 'openhab-distro' ${SNAPCRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $3}')
-            BUILD_NO=$(grep 'build-no' ${SNAPCRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $4}' | cut -c 2-)
+            tar xf openhab-*.tar.gz -C ${CRAFT_PART_INSTALL}
+            VERSION=$(grep 'openhab-distro' ${CRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $3}')
+            BUILD_NO=$(grep 'build-no' ${CRAFT_PART_INSTALL}/userdata/etc/version.properties | awk '{print $4}' | cut -c 2-)
             [ -n "$(echo $VERSION | grep SNAPSHOT)" ] && VERSION="${VERSION}-bn${BUILD_NO}"
-            snapcraftctl set-version ${VERSION}
+            craftctl set version=${VERSION}
             echo "Correcting writable paths"
-            sed -i '/-Dopenhab.logdir=${OPENHAB_LOGDIR}/a -Duser.home=${SNAP_DATA}/' $SNAPCRAFT_PART_INSTALL/runtime/bin/setenv
-            find  $SNAPCRAFT_PART_INSTALL//runtime/bin/ -type f \
+            sed -i '/-Dopenhab.logdir=${OPENHAB_LOGDIR}/a -Duser.home=${SNAP_DATA}/' ${CRAFT_PART_INSTALL}/runtime/bin/setenv
+            find  ${CRAFT_PART_INSTALL}/runtime/bin/ -type f \
                    -exec sed -i -e 's#${KARAF_HOME}/instances#${SNAP_DATA}/karaf/instances#g' {} \;
             sed -i -e 's#${openhab.home}/addons#${karaf.data}/../addons#g' \
-                   $SNAPCRAFT_PART_INSTALL/userdata/etc/org.apache.felix.fileinstall-deploy.cfg
+                   ${CRAFT_PART_INSTALL}/userdata/etc/org.apache.felix.fileinstall-deploy.cfg
 
     # dependency stage packages to include in the snap, handle cross compilation support here
     dependencies:
@@ -255,40 +243,40 @@ parts:
     jre:
         plugin: nil
         override-pull: |
-          echo "SNAPCRAFT_ARCH_TRIPLET=${SNAPCRAFT_ARCH_TRIPLET}"
+          echo "CRAFT_ARCH_TRIPLET_BUILD_FOR=${CRAFT_ARCH_TRIPLET_BUILD_FOR}"
           extension="deb"
-          if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=17&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jre" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${SNAPCRAFT_PART_SRC}/zulu_version.json
+          if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "arm-linux-gnueabihf" ]; then
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=17&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jre" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${CRAFT_PART_SRC}/zulu_version.json
               extension="tar.gz"
-          elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=arm&hw_bitness=64&bundle_type=jre" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
-          elif [ "${SNAPCRAFT_ARCH_TRIPLET}" = "x86_64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=x86&hw_bitness=64&bundle_type=jre" | jq . > ${SNAPCRAFT_PART_SRC}/zulu_version.json
+          elif [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "aarch64-linux-gnu" ]; then
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=arm&hw_bitness=64&bundle_type=jre" | jq . > ${CRAFT_PART_SRC}/zulu_version.json
+          elif [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "x86_64-linux-gnu" ]; then
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=x86&hw_bitness=64&bundle_type=jre" | jq . > ${CRAFT_PART_SRC}/zulu_version.json
           fi
-          url_link=$(jq -r '.url' ${SNAPCRAFT_PART_SRC}/zulu_version.json)
+          url_link=$(jq -r '.url' ${CRAFT_PART_SRC}/zulu_version.json)
           echo "url_link=[${url_link}]"
           wget -O zulu.${extension} ${url_link}
         override-build: |
           # we use deb on amd64 and arm64
-          if [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
-            tar -C ${SNAPCRAFT_PART_INSTALL} -xf ${SNAPCRAFT_PART_SRC}/zulu.tar.gz --strip 1
+          if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "arm-linux-gnueabihf" ]; then
+            tar -C ${CRAFT_PART_INSTALL} -xf ${CRAFT_PART_SRC}/zulu.tar.gz --strip 1
           else
-            dpkg -x ${SNAPCRAFT_PART_SRC}/zulu.deb ${SNAPCRAFT_PART_INSTALL}
-            cp -rl ${SNAPCRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${SNAPCRAFT_TARGET_ARCH}/* ${SNAPCRAFT_PART_INSTALL}
-            rm -rf ${SNAPCRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${SNAPCRAFT_TARGET_ARCH}
+            dpkg -x ${CRAFT_PART_SRC}/zulu.deb ${CRAFT_PART_INSTALL}
+            cp -rl ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${CRAFT_ARCH_BUILD_FOR}/* ${CRAFT_PART_INSTALL}
+            rm -rf ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${CRAFT_ARCH_BUILD_FOR}
           fi
-          rm -rf ${SNAPCRAFT_PART_INSTALL}/demo \
-                 ${SNAPCRAFT_PART_INSTALL}/include \
-                 ${SNAPCRAFT_PART_INSTALL}/jmods \
-                 ${SNAPCRAFT_PART_INSTALL}/legal \
-                 ${SNAPCRAFT_PART_INSTALL}/lib/ct.sym \
-                 ${SNAPCRAFT_PART_INSTALL}/lib/libattach.so \
-                 ${SNAPCRAFT_PART_INSTALL}/lib/libsaproc.so \
-                 ${SNAPCRAFT_PART_INSTALL}/lib/src.zip \
-                 ${SNAPCRAFT_PART_INSTALL}/man
-          cp ${SNAPCRAFT_PART_BUILD}/zulu_version.json ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          rm -rf ${CRAFT_PART_INSTALL}/demo \
+                 ${CRAFT_PART_INSTALL}/include \
+                 ${CRAFT_PART_INSTALL}/jmods \
+                 ${CRAFT_PART_INSTALL}/legal \
+                 ${CRAFT_PART_INSTALL}/lib/ct.sym \
+                 ${CRAFT_PART_INSTALL}/lib/libattach.so \
+                 ${CRAFT_PART_INSTALL}/lib/libsaproc.so \
+                 ${CRAFT_PART_INSTALL}/lib/src.zip \
+                 ${CRAFT_PART_INSTALL}/man
+          cp ${CRAFT_PART_BUILD}/zulu_version.json ${CRAFT_PART_INSTALL}/zulu_version.json
           # remove potential 's' file mode
-          chmod -s -R ${SNAPCRAFT_PART_INSTALL}/*
+          chmod -s -R ${CRAFT_PART_INSTALL}/*
         organize:
           LICENSE: LICENSE_ZULU
           release: release_zulu
@@ -318,16 +306,16 @@ parts:
         source-depth: 1
         plugin: python
         override-build: |
-            export PATH="$SNAPCRAFT_STAGE/bin:$PATH"
+            export PATH="$CRAFT_STAGE/bin:$PATH"
             export GOPATH=$(readlink -f $(pwd)/../go)
             export GOIMPORTPATH=$GOPATH/src/github.com/influxdata/influxdb/
             mkdir -p $GOIMPORTPATH
             cp -r ./* $GOIMPORTPATH
             cp -r .git $GOIMPORTPATH
             cd $GOIMPORTPATH
-            python build.py --outdir $SNAPCRAFT_PART_INSTALL/bin
-            mkdir -p $SNAPCRAFT_PART_INSTALL/conf
-            cp etc/config.sample.toml $SNAPCRAFT_PART_INSTALL/conf/influxdb.conf
+            python build.py --outdir ${CRAFT_PART_INSTALL}/bin
+            mkdir -p ${CRAFT_PART_INSTALL}/conf
+            cp etc/config.sample.toml ${CRAFT_PART_INSTALL}/conf/influxdb.conf
         stage-packages:
             - libdb5.3-dev
         stage:
