@@ -25,7 +25,7 @@ architectures:
 environment:
     JAVA_HOME:        ${SNAP}
     PATH:             ${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:${PATH}
-    LD_LIBRARY_PATH:  ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}
+    LD_LIBRARY_PATH:  ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${CRAFT_ARCH_TRIPLET}:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET}
     OPENHAB_CONF:     ${SNAP_DATA}/conf
     OPENHAB_RUNTIME:  ${SNAP}/runtime
     OPENHAB_USERDATA: ${SNAP_DATA}/userdata
@@ -243,14 +243,14 @@ parts:
     jre:
         plugin: nil
         override-pull: |
-          echo "CRAFT_ARCH_TRIPLET_BUILD_FOR=${CRAFT_ARCH_TRIPLET_BUILD_FOR}"
+          echo "CRAFT_ARCH_TRIPLET=${CRAFT_ARCH_TRIPLET}"
           extension="deb"
-          if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "arm-linux-gnueabihf" ]; then
+          if [ "${CRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
               curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=17&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jre" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${CRAFT_PART_SRC}/zulu_version.json
               extension="tar.gz"
-          elif [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "aarch64-linux-gnu" ]; then
+          elif [ "${CRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
               curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=arm&hw_bitness=64&bundle_type=jre" | jq . > ${CRAFT_PART_SRC}/zulu_version.json
-          elif [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "x86_64-linux-gnu" ]; then
+          elif [ "${CRAFT_ARCH_TRIPLET}" = "x86_64-linux-gnu" ]; then
               curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=x86&hw_bitness=64&bundle_type=jre" | jq . > ${CRAFT_PART_SRC}/zulu_version.json
           fi
           url_link=$(jq -r '.url' ${CRAFT_PART_SRC}/zulu_version.json)
@@ -258,12 +258,12 @@ parts:
           wget -O zulu.${extension} ${url_link}
         override-build: |
           # we use deb on amd64 and arm64
-          if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "arm-linux-gnueabihf" ]; then
+          if [ "${CRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
             tar -C ${CRAFT_PART_INSTALL} -xf ${CRAFT_PART_SRC}/zulu.tar.gz --strip 1
           else
             dpkg -x ${CRAFT_PART_SRC}/zulu.deb ${CRAFT_PART_INSTALL}
-            cp -rl ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${CRAFT_ARCH_BUILD_FOR}/* ${CRAFT_PART_INSTALL}
-            rm -rf ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${CRAFT_ARCH_BUILD_FOR}
+            cp -rl ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${CRAFT_TARGET_ARCH}/* ${CRAFT_PART_INSTALL}
+            rm -rf ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${CRAFT_TARGET_ARCH}
           fi
           rm -rf ${CRAFT_PART_INSTALL}/demo \
                  ${CRAFT_PART_INSTALL}/include \
