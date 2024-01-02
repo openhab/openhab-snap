@@ -287,6 +287,8 @@ parts:
                  ${SNAPCRAFT_PART_INSTALL}/lib/src.zip \
                  ${SNAPCRAFT_PART_INSTALL}/man
           cp ${SNAPCRAFT_PART_BUILD}/zulu_version.json ${SNAPCRAFT_PART_INSTALL}/zulu_version.json
+          # remove potential 's' file mode
+          chmod -s -R ${SNAPCRAFT_PART_INSTALL}/*
         organize:
           LICENSE: LICENSE_ZULU
           release: release_zulu
