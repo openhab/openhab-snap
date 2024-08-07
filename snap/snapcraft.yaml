@@ -168,42 +168,32 @@ parts:
         organize:
           LICENSE: LICENSE_OPENHAB
         override-pull: |
-            # if beta is closed, check edge
-            for ch in "beta" "edge"; do
-                last_released_tag="$(snap info ${CRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
-                if [ -n "${last_released_tag}" ] && [ ! "${last_released_tag}" = "^" ]; then
-                    break
-                fi
-            done
-            # if candidate is close, go to beta -> edge
-            for ch in "candidate" "beta" "edge"; do
-                last_candidate_tag="$(snap info ${CRAFT_PROJECT_NAME} | grep "latest/${ch}" | awk '{ print $2 }')"
-                if [ -n "${last_candidate_tag}" ] && [ ! "${last_candidate_tag}" = "^" ]; then
-                    break
-                fi
-            done
+            stable_version="$(snap info ${CRAFT_PROJECT_NAME} | awk '$1 == "latest/stable:" {gsub(/--/,"",$2); print $2 }')"
+            candidate_version="$(snap info ${CRAFT_PROJECT_NAME} | awk '$1 == "latest/candidate:" {gsub(/--/,"",$2); print $2 }')"
+            beta_version="$(snap info ${CRAFT_PROJECT_NAME} | awk '$1 == "latest/beta:" {gsub(/--/,"",$2); print $2 }')"
             wget -O release-metadata.xml \
                  https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/maven-metadata.xml
             wget -O milestone-metadata.xml \
                  https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml
-            milestone_version="$(xmllint --xpath "string(//latest)" milestone-metadata.xml)"
-            latest_version="$(xmllint --xpath "string(//latest)" release-metadata.xml)"
+            milestone_version="$(xmllint --xpath "string(//release)" milestone-metadata.xml)"
+            release_version="$(xmllint --xpath "string(//release)" release-metadata.xml)"
             # first we check for milestone in candidate, then if we have latest release version in beta
-            echo "last_released_tag=${last_released_tag}, last_candidate_tag=${last_candidate_tag}, " \
-                 "latest_version=${latest_version}, milestone_version=${milestone_version}"
-            # compare main version of milestore release to candidate version e.g. 3.0.0.RC2 -> 3.0.0,
-            # since 3.0.0.RC2 is otherwise consideted as newer then final 3.0.0, which would be wrong
-            if $(dpkg --compare-versions "${latest_version}" "lt" "$(echo ${milestone_version} | cut -c -5)") && \
-               [ "${last_candidate_tag}" != "${milestone_version}" ]; then
+            echo "stable_version=${stable_version}, candidate_version=${candidate_version}, " \
+                 "beta_version=${beta_version}, release_version=${release_version}, milestone_version=${milestone_version}"
+            # compare release version and milestore release against stable, candidate and beta channel versions
+            # trim milestone version e.g. 3.0.0.RC2 -> 3.0.0, otherwise it isconsideted as newer then final 3.0.0
+            if dpkg --compare-versions "${release_version}" "lt" "$(echo ${milestone_version} | cut -c -5)" \
+               && [ "${milestone_version}" != "${candidate_version}" \
+                    -o "^" = "${milestone_version}" ]; then
                echo "Building latest milestone version: ${milestone_version}"
                wget --quiet \
                     -O openhab-milestone.tar.gz \
                     https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/${milestone_version}/openhab-${milestone_version}.tar.gz
-            elif [ "${latest_version}" != "${last_released_tag}" ]; then
-               echo "Building latest release version: ${latest_version}"
+            elif [ "${release_version}" != "${stable_version}" ] || [ "^" = "${beta_version}" ]; then
+               echo "Building latest release version: ${release_version}"
                wget --quiet \
                     -O openhab-release.tar.gz \
-                    https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/${latest_version}/openhab-${latest_version}.tar.gz
+                    https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/${release_version}/openhab-${release_version}.tar.gz
             else
                echo "Building latest snapshot version"
                wget --quiet \
