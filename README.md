@@ -32,6 +32,7 @@ snap install multipass --classic  # Fallback backend
 git clone https://github.com/openhab/openhab-snap.git
 cd openhab-snap
 snapcraft  # Snapcraft will automatically create and manage build containers
+snap install --dangerous openhab_*.snap
 ```
 
 ### Method 2: Manual LXC Container (Nested/Restricted Environments)
