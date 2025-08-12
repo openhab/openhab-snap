@@ -236,12 +236,12 @@ parts:
           echo "CRAFT_ARCH_TRIPLET_BUILD_FOR=${CRAFT_ARCH_TRIPLET_BUILD_FOR}"
           extension="deb"
           if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "arm-linux-gnueabihf" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=17&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jre" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${CRAFT_PART_SRC}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=21&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jre" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${CRAFT_PART_SRC}/zulu_version.json
               extension="tar.gz"
           elif [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "aarch64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=arm&hw_bitness=64&bundle_type=jre" | jq . > ${CRAFT_PART_SRC}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=21&ext=deb&os=linux&arch=arm&hw_bitness=64&bundle_type=jre" | jq . > ${CRAFT_PART_SRC}/zulu_version.json
           elif [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "x86_64-linux-gnu" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=17&ext=deb&os=linux&arch=x86&hw_bitness=64&bundle_type=jre" | jq . > ${CRAFT_PART_SRC}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=21&ext=deb&os=linux&arch=x86&hw_bitness=64&bundle_type=jre" | jq . > ${CRAFT_PART_SRC}/zulu_version.json
           fi
           url_link=$(jq -r '.url' ${CRAFT_PART_SRC}/zulu_version.json)
           echo "url_link=[${url_link}]"
@@ -252,8 +252,8 @@ parts:
             tar -C ${CRAFT_PART_INSTALL} -xf ${CRAFT_PART_SRC}/zulu.tar.gz --strip 1
           else
             dpkg -x ${CRAFT_PART_SRC}/zulu.deb ${CRAFT_PART_INSTALL}
-            cp -rl ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${CRAFT_ARCH_BUILD_FOR}/* ${CRAFT_PART_INSTALL}
-            rm -rf ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-17-${CRAFT_ARCH_BUILD_FOR}
+            cp -rl ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-21-${CRAFT_ARCH_BUILD_FOR}/* ${CRAFT_PART_INSTALL}
+            rm -rf ${CRAFT_PART_INSTALL}/usr/lib/jvm/zre-21-${CRAFT_ARCH_BUILD_FOR}
           fi
           rm -rf ${CRAFT_PART_INSTALL}/demo \
                  ${CRAFT_PART_INSTALL}/include \
@@ -324,10 +324,10 @@ build-packages:
     - autoconf
     - libtool
     - build-essential
-    - rpm
+      #    - rpm
     - zip
     - python3
-    - python3-boto
+    - python3-boto3
     - python-is-python3
     - asciidoc
     - xmlto
