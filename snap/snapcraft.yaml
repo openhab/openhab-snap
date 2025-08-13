@@ -168,6 +168,14 @@ parts:
         organize:
           LICENSE: LICENSE_OPENHAB
         override-pull: |
+            # armhf support ends with 4.x
+            if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "arm-linux-gnueabihf" ]; then
+               echo "Building latest milestone version: ${milestone_version}"
+               wget --quiet \
+                    -O openhab-milestone.tar.gz \
+                    https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/4.3.6/openhab-4.3.6.tar.gz
+               exit 0
+            fi
             stable_version="$(snap info ${CRAFT_PROJECT_NAME} | awk '$1 == "latest/stable:" {gsub(/--/,"",$2); print $2 }')"
             candidate_version="$(snap info ${CRAFT_PROJECT_NAME} | awk '$1 == "latest/candidate:" {gsub(/--/,"",$2); print $2 }')"
             beta_version="$(snap info ${CRAFT_PROJECT_NAME} | awk '$1 == "latest/beta:" {gsub(/--/,"",$2); print $2 }')"
@@ -236,7 +244,7 @@ parts:
           echo "CRAFT_ARCH_TRIPLET_BUILD_FOR=${CRAFT_ARCH_TRIPLET_BUILD_FOR}"
           extension="deb"
           if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "arm-linux-gnueabihf" ]; then
-              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=21&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jre" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${CRAFT_PART_SRC}/zulu_version.json
+              curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/?zulu_version=17&ext=tar.gz&os=linux&arch=arm&hw_bitness=32&bundle_type=jre" | jq -c 'sort_by(.id) | .[] | select(.name | contains("aarch32hf"))' | jq -s '.[-1]' > ${CRAFT_PART_SRC}/zulu_version.json
               extension="tar.gz"
           elif [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "aarch64-linux-gnu" ]; then
               curl -H "Accept: application/json" "https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?zulu_version=21&ext=deb&os=linux&arch=arm&hw_bitness=64&bundle_type=jre" | jq . > ${CRAFT_PART_SRC}/zulu_version.json
