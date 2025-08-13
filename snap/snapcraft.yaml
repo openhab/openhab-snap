@@ -170,7 +170,7 @@ parts:
         override-pull: |
             # armhf support ends with 4.x
             if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "arm-linux-gnueabihf" ]; then
-               echo "Building latest milestone version: ${milestone_version}"
+               echo "armhf: building legacy version 4.x"
                wget --quiet \
                     -O openhab-milestone.tar.gz \
                     https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/4.3.6/openhab-4.3.6.tar.gz
