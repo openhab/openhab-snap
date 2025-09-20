@@ -15,12 +15,12 @@ description: |
 confinement: strict
 grade: stable
 adopt-info: openhab
-base: core22
+base: core24
 
-architectures:
-    - build-on: armhf
-    - build-on: arm64
-    - build-on: amd64
+platforms:
+    armhf:
+    arm64:
+    amd64:
 
 environment:
     JAVA_HOME:        ${SNAP}
@@ -184,7 +184,7 @@ parts:
             wget -O milestone-metadata.xml \
                  https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml
             milestone_version="$(xmllint --xpath "string(//release)" milestone-metadata.xml)"
-            release_version="$(xmllint --xpath "string(//release)" release-metadata.xml)"
+            release_version="$(xmllint --xpath "string(//latest)" release-metadata.xml)"
             # first we check for milestone in candidate, then if we have latest release version in beta
             echo "stable_version=${stable_version}, candidate_version=${candidate_version}, " \
                  "beta_version=${beta_version}, release_version=${release_version}, milestone_version=${milestone_version}"
