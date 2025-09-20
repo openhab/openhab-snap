@@ -75,7 +75,7 @@ Use this method when snapcraft cannot manage containers (e.g., inside existing c
 
 **Notes:**
 - **Method 1**: Snapcraft manages containers automatically, provides cleaner isolation
-- **Method 2**: Required when LXC nesting is unavailable or snapcraft lacks container privileges  
+- **Method 2**: Required when LXC nesting is unavailable or snapcraft lacks container privileges
 - Use `--destructive-mode` only when snapcraft cannot create its own build environment
 - The `--dangerous` flag is needed because the snap is not from the official store
 - For different architectures, adapt the image tag (e.g., `ubuntu:22.04/amd64`) and use the appropriate platform, cross-compilation is not supported with snapcraft.
