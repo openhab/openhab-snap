@@ -1,4 +1,4 @@
-name: openhab
+name: openhab-ondra
 summary: openHAB smart home server
 description: |
  openHAB - a vendor and technology agnostic open source automation software for your home.
@@ -168,19 +168,20 @@ parts:
         organize:
           LICENSE: LICENSE_OPENHAB
         override-pull: |
+            wget -O release-metadata.xml \
+                 https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/maven-metadata.xml
             # armhf support ends with 4.x
             if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "arm-linux-gnueabihf" ]; then
-               echo "armhf: building legacy version 4.x"
+               version_4_x="$(xmllint --xpath 'string(//version[starts-with(., "4.")][last()])' release-metadata.xml)"
+               echo "armhf: building legacy version ${version_4_x}"
                wget --quiet \
                     -O openhab-milestone.tar.gz \
-                    https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/4.3.6/openhab-4.3.6.tar.gz
+                    "https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/${version_4_x}/openhab-${version_4_x}.tar.gz"
                exit 0
             fi
             stable_version="$(snap info ${CRAFT_PROJECT_NAME} | awk '$1 == "latest/stable:" {gsub(/--/,"",$2); print $2 }')"
             candidate_version="$(snap info ${CRAFT_PROJECT_NAME} | awk '$1 == "latest/candidate:" {gsub(/--/,"",$2); print $2 }')"
             beta_version="$(snap info ${CRAFT_PROJECT_NAME} | awk '$1 == "latest/beta:" {gsub(/--/,"",$2); print $2 }')"
-            wget -O release-metadata.xml \
-                 https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab/maven-metadata.xml
             wget -O milestone-metadata.xml \
                  https://openhab.jfrog.io/openhab/libs-milestone-local/org/openhab/distro/openhab/maven-metadata.xml
             milestone_version="$(xmllint --xpath "string(//release)" milestone-metadata.xml)"
